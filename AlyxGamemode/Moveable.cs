@@ -51,11 +51,14 @@ namespace AlyxGamemode
         }
         private void Track(object? sender, System.Timers.ElapsedEventArgs e)
         {
-            IndexedClient? client = Connections.Find(c => c.Session.ConnectionInfo.Id != ClientID);
             Response response = new("command", "kcom_grace " + MovedObject.Name);
-            if (client != null)
+            string serializedResponse = JsonConvert.SerializeObject(response);
+            foreach (IndexedClient client in Connections)
             {
-                client.Session.Send(JsonConvert.SerializeObject(response));
+                if (client.Session.ConnectionInfo.Id != ClientID)
+                {
+                    client.Session.Send(serializedResponse);
+                }
             }
             TimedOut = true;
         }

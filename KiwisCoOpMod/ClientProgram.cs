@@ -96,7 +96,7 @@ namespace KiwisCoOpMod
                                 {
                                     ui.Invoke(() => ui.LogToOutput(channel, "Client is running an older version! Please update your client."));
                                 }
-                                else if (response.version > Response.internalVersion)
+                                else if (response.version < Response.internalVersion)
                                 {
                                     ui.Invoke(() => ui.LogToOutput(channel, "Server is running an older version! Please ask the owner to update their server."));
                                 }
