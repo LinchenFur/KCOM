@@ -114,7 +114,7 @@ lua_env.handlers[lua_env.persistence["script_checkpoints"]] = function(handleTyp
             lua_env.persistence["checkpoint_index"] = lua_env.persistence["checkpoint_index"] + 1
         end
         -- Display text for 5 seconds
-        if os.time() - lua_env.persistence["checkpoint_start_time"] > 5 and lua_env.persistence["checkpoint_checkpoint_using_hud"] then
+        if os.time() - lua_env.persistence["checkpoint_start_time"] > 5 and lua_env.persistence["checkpoint_using_hud"] then
             for i = 0, allPlayers.Count - 1 do
                 local player = allPlayers[i]
                 if not player then break end

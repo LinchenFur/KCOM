@@ -113,7 +113,7 @@ function KiwisCoOpMod()
         function KCOM_EntitySyncSpecific(entity)
             local precached = {}
 
-            for _, object in ipairs(KCOM_ENTCACHE) do
+            for _, object in pairs(KCOM_ENTCACHE) do
                 if IsValidEntity(object.entity) then
                     precached[object.entity:GetEntityIndex()] = true;
                 end
