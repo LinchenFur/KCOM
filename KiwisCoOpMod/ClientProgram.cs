@@ -51,15 +51,8 @@ namespace KiwisCoOpMod
                 ui.Invoke(() => ui.LogToOutput(channel, "正在通过端口连接 VConsole：" + Settings.Default.VconsolePort));
                 if (!vConsole.Connect(ws))
                 {
-                    ui.Invoke(() =>
-                    {
-                        ui.LogToOutput(channel, "连接 VConsole 失败");
-                        DialogResult res = MessageBox.Show("连接 VConsole 时发生错误。\n请确认《半条命：Alyx》已启动。\n是否重新连接？", "错误", MessageBoxButtons.YesNo);
-                        if (res == DialogResult.Yes)
-                            ConnectVConsole(ws);
-                        else
-                            ui.Invoke(() => ui.LogToOutput(channel, "已断开 VConsole 连接"));
-                    });
+                    ui.Invoke(() => ui.LogToOutput(channel,
+                        "连接 VConsole 失败；KCOM 将继续运行。请确认游戏已启动并开放 VConsole 端口，然后重新启动 KCOM。"));
                 }
             }
         }
