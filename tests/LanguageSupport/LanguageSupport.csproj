@@ -10,6 +10,7 @@
     <PackageReference Include="Websocket.Client" Version="4.4.43" />
     <PackageReference Include="NLua" Version="1.6.0" />
     <Compile Include="../../KiwisCoOpMod/VConsole.cs" Link="VConsole.cs" />
+    <Compile Include="../../KiwisCoOpMod/ClientProgram.cs" Link="ClientProgram.cs" />
     <Compile Include="../../KiwisCoOpMod/VConsoleProtocol.cs" Link="VConsoleProtocol.cs" />
     <Compile Include="../../KiwisCoOpMod/StreamWatcher.cs" Link="StreamWatcher.cs" />
     <None Include="../../WorkshopAddon/game/hlvr_addons/kiwimp_alyx/scripts/vscripts/kcom_bootstrap.lua" Link="kcom_bootstrap.lua" CopyToOutputDirectory="PreserveNewest" />

@@ -235,6 +235,11 @@ namespace KiwisCoOpMod
                     checkBoxServerEnabled.Checked = true;
                 else if (checkBoxClientEnabled.Checked)
                     checkBoxServerEnabled.Checked = false;
+                if (checkBoxServerEnabled.Checked && !Map.TryNormalize(textBoxServerMap.Text, out _))
+                {
+                    LogToOutput(channel, Map.InvalidNameMessage);
+                    return;
+                }
                 PluginHandler.Handle(plugins, PluginHandleType.UserInterface_PreStart, this);
                 LuaEnvironment.instance.Handle(PluginHandleType.UserInterface_PreStart, this);
                 started = true;

@@ -5,6 +5,7 @@ local Player = Entities:GetLocalPlayer();
 KCOM_USE_UUIDS = true;
 KCOM_API_VERSION = 4; -- this value will change if breaking changes are pushed to workshop
 KCOM_ACTIVE = false;
+KCOM_INITIALIZED = false;
 KCOM_ENTCACHE = {};
 
 print("KCOM Enabled!");
@@ -826,7 +827,8 @@ function KiwisCoOpMod()
             KCOM_EntitySync(false)
         end, "Kiwi's Co-Op Mod", 0);
 
-        print("MAPN "..GetMapName().." "..KCOM_API_VERSION.." KCOM");
         KCOM_EntitySync(true);
+        KCOM_INITIALIZED = true;
+        print("MAPN "..GetMapName().." "..KCOM_API_VERSION.." KCOM");
     end
 end

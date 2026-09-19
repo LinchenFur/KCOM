@@ -44,7 +44,7 @@ namespace KiwisCoOpMod
             this.ui = ui;
         }
 
-        public void ConnectVConsole(WebsocketClient ws)
+        public bool ConnectVConsole(WebsocketClient ws)
         {
             if (ws != null && vConsole != null)
             {
@@ -52,9 +52,12 @@ namespace KiwisCoOpMod
                 if (!vConsole.Connect(ws))
                 {
                     ui.Invoke(() => ui.LogToOutput(channel,
-                        "连接 VConsole 失败；KCOM 将继续运行。请确认游戏已启动并开放 VConsole 端口，然后重新启动 KCOM。"));
+                        "连接 VConsole 失败；游戏客户端未启动。请先启动 Alyx 并关闭独立 VConsole 窗口，再点击“停止”→“启动”重试。"));
+                    return false;
                 }
+                return true;
             }
+            return false;
         }
         public void Start(List<Type> pluginTypes)
         {
@@ -70,12 +73,16 @@ namespace KiwisCoOpMod
                     ReconnectTimeout = TimeSpan.FromSeconds(60),
                     IsReconnectionEnabled = false
                 };
+                var session = ws;
                 ws.DisconnectionHappened.Subscribe(info =>
                 {
-                    ui.Invoke(() => ui.LogToOutput(channel, "已断开连接：" + info.Type.ToString()));
+                    if (ws != session) return;
+                    vConsole?.Disconnect();
+                    ui.BeginInvoke(new Action(() => ui.LogToOutput(channel, "已断开连接：" + info.Type.ToString())));
                 });
                 ws.MessageReceived.Subscribe(msg =>
                 {
+                    if (ws != session) return;
                     Response? response = JsonConvert.DeserializeObject<Response>(msg.Text);
                     if (response != null && response.type != null)
                     {
@@ -92,14 +99,18 @@ namespace KiwisCoOpMod
                                 {
                                     ui.Invoke(() => ui.LogToOutput(channel, "服务器版本较旧！请联系服务器主机更新。"));
                                 }
-                                if (vConsole != null && response.map != null)
+                                if (!Map.TryNormalize(response.map, out string requestedMap))
                                 {
-                                    if (map != response.map)
+                                    ui.Invoke(() => ui.LogToOutput(channel, Map.InvalidNameMessage));
+                                    break;
+                                }
+                                if (vConsole != null)
+                                {
+                                    if (map != requestedMap)
                                     {
-                                        ui.Invoke(() => ui.LogToOutput(channel, "正在切换地图：" + response.map));
-                                        vConsole.WriteCommand("addon_enable 2739356543;addon_enable kiwimp_alyx");
-                                        vConsole.WriteCommand("addon_play " + response.map + ";addon_tools_map " + response.map);
-                                        map = response.map;
+                                        ui.Invoke(() => ui.LogToOutput(channel, "已请求切换地图：" + requestedMap + "；等待游戏回报，尚未确认加载成功。"));
+                                        vConsole.WriteCommand(Map.LoadCommand(requestedMap));
+                                        map = requestedMap;
                                     }
                                     vConsole.StartBootstrapProbe();
                                 }
@@ -144,35 +155,40 @@ namespace KiwisCoOpMod
                 });
                 ws.ReconnectionHappened.Subscribe(recinfo =>
                 {
+                    if (ws != session) return;
                     Response input = new("client")
                     {
                         clientUsername = Settings.Default.ClientUsername,
                         password = Settings.Default.ClientPassword,
                         timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds
                     };
-                    ws.Send(JsonConvert.SerializeObject(input));
-                    ui.Invoke(() => ui.LogToOutput(channel, "客户端尝试连接到 IP：" + Settings.Default.ClientIpAddress + ":" + Settings.Default.ServerPort));
+                    session.Send(JsonConvert.SerializeObject(input));
+                    ui.Invoke(() => ui.LogToOutput(channel, "客户端尝试连接到 IP：" + Settings.Default.ClientIpAddress + ":" + Settings.Default.ClientPort));
                 });
+                // A fast authentication response must never race the console connection.
+                if (!ConnectVConsole(ws))
+                {
+                    ws = null;
+                    session.Dispose();
+                    return;
+                }
                 ws.Start();
-                ConnectVConsole(ws);
                 PluginHandler.Handle(plugins, PluginHandleType.Client_PostStart, ui, ws, error);
                 LuaEnvironment.instance.Handle(PluginHandleType.Client_PostStart, ui, ws, error);
             }
         }
         public void Close()
         {
+            vConsole?.Disconnect();
             if (ws != null)
             {
                 PluginHandler.Handle(plugins, PluginHandleType.Client_PreClose, ui, ws);
                 LuaEnvironment.instance.Handle(PluginHandleType.Client_PreClose, ui, ws);
-                ws.Stop(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "Closed by KCOM.");
-                ws.Dispose();
-                ws = null;
+                var session = ws;
+                ws = null; // Ignore callbacks from the session being disposed.
+                session.Stop(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "Closed by KCOM.");
+                session.Dispose();
                 ui.Invoke(() => ui.LogToOutput(channel, "客户端已关闭"));
-            }
-            if (vConsole != null)
-            {
-                vConsole.Disconnect();
             }
         }
         public void Chat(string text)

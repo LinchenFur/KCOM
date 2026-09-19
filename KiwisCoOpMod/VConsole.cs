@@ -83,6 +83,7 @@ namespace KiwisCoOpMod
             bootstrapCancellation = new CancellationTokenSource();
             var token = bootstrapCancellation.Token;
             var connectedStream = stream;
+            var connectedWatcher = watcher;
             if (connectedStream == null) return;
             string session = Guid.NewGuid().ToString("N");
             string command = "sv_cheats 1;script KCOM_BOOTSTRAP_SESSION=\"" + session + "\";script_execute kcom_bootstrap";
@@ -91,7 +92,7 @@ namespace KiwisCoOpMod
             {
                 try
                 {
-                    while (!token.IsCancellationRequested && watcher?.Completion.IsCompleted == false)
+                    while (!token.IsCancellationRequested && connectedWatcher?.Completion.IsCompleted == false)
                     {
                         lock (writeLock)
                         {
@@ -111,7 +112,7 @@ namespace KiwisCoOpMod
 
         private void MessageAvailable(object sender, MessageAvailableEventArgs e)
         {
-            if (ws == null || e.MessageType != "PRNT") return;
+            if (sender != watcher || ws == null || !ws.IsStarted || e.MessageType != "PRNT") return;
             foreach (string line in VConsoleProtocol.PrintLines(e.Data))
             {
                 Response input = new("print", line);

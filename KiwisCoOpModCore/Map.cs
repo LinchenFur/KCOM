@@ -25,5 +25,27 @@ namespace KiwisCoOpModCore
     public static class Map
     {
         public static string map = "";
+        public const string InvalidNameMessage = "地图名无效：请输入地图内部名称（如 mp_kiwitest），不要带扩展名、反斜杠、空格或控制台命令。";
+
+        public static bool TryNormalize(string? input, out string name)
+        {
+            name = input?.Trim() ?? "";
+            if (name.Length == 0 || name.Length > 240) return false;
+            foreach (string segment in name.Split('/'))
+            {
+                if (segment.Length == 0) return false;
+                foreach (char c in segment)
+                    if (!(c >= 'a' && c <= 'z') && !(c >= 'A' && c <= 'Z') &&
+                        !(c >= '0' && c <= '9') && c != '_' && c != '-') return false;
+            }
+            return true;
+        }
+
+        public static string LoadCommand(string name)
+        {
+            if (!TryNormalize(name, out string normalized))
+                throw new ArgumentException(InvalidNameMessage, nameof(name));
+            return "addon_enable 2739356543;addon_enable kiwimp_alyx;addon_play " + normalized + ";addon_tools_map " + normalized;
+        }
     }
 }

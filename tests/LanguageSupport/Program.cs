@@ -11,7 +11,7 @@ using KiwisCoOpModCore;
 using Newtonsoft.Json;
 using NLua;
 
-internal static class Program
+internal static partial class Program
 {
     private static int checks;
     static void Check(bool value, string message)
@@ -115,7 +115,9 @@ internal static class Program
         }
         await TestTransport(longText);
         TestLuaBootstrap(multilingual);
+        TestMapNames();
         await TestGamemode();
+        await TestClientStartup();
         Console.WriteLine($"PASS: {checks} language support checks (mock game/loopback, not a live Alyx playtest).");
     }
 
@@ -199,16 +201,16 @@ internal static class Program
         lua["sample"] = text;
         Check((string)lua.DoString("return sample")[0] == text, "Lua UTF-8 bridge");
         lua.DoString(@"
-            now = 0; validPlayer = false; scriptExists = false; timerExists = false; prints = 0
+            now = 0; validPlayer = false; scriptExists = false; timerExists = false; initialized = false; prints = 0; errors = 0
             Entities = {}
             function Entities:GetLocalPlayer() if validPlayer then return {} end end
             function Entities:FindByName(_, name)
-                if name == 'kcom_script' and scriptExists then return {} end
+                if name == 'kcom_script' and scriptExists then return { GetPrivateScriptScope = function() return {KCOM_INITIALIZED=initialized} end } end
                 if name == 'kcom_timer' and timerExists then return {} end
             end
             function IsValidEntity(e) return e ~= nil end
             function Time() return now end
-            function print(message) assert(message == 'KRDY KCOM'); prints = prints + 1 end
+            function print(message) if message == 'KERR KCOM' then errors = errors + 1 else assert(message == 'KRDY KCOM'); prints = prints + 1 end end
             KCOM_BOOTSTRAP_SESSION = 'session1'
         ");
         void Run() => lua.DoFile(Path.Combine(AppContext.BaseDirectory, "kcom_bootstrap.lua"));
@@ -217,10 +219,13 @@ internal static class Program
         lua.DoString("validPlayer = true"); Run(); Check(Count() == 1, "first player readiness");
         Run(); Check(Count() == 1, "no duplicate during initialization");
         lua.DoString("now = 11"); Run(); Check(Count() == 2, "retry missing initialization");
-        lua.DoString("scriptExists = true; timerExists = true; now = 30"); Run(); Check(Count() == 2, "idle after successful initialization");
-        lua.DoString("KCOM_BOOTSTRAP_SESSION = 'session2'"); Run(); Check(Count() == 3, "new session initializes existing map");
+        lua.DoString("scriptExists = true; timerExists = true; now = 30"); Run(); Check(Count() == 3, "entities without completed script still retry");
+        Check(Convert.ToInt32(lua["errors"]) == 2, "script failure diagnostic");
+        Run(); Check(Count() == 3, "failed script retries are throttled");
+        lua.DoString("initialized = true; now = 50"); Run(); Check(Count() == 3, "idle after actual initialization");
+        lua.DoString("KCOM_BOOTSTRAP_SESSION = 'session2'"); Run(); Check(Count() == 4, "new session initializes existing map");
         lua.DoString("KCOM_BOOTSTRAP_STARTED_SESSION=nil; KCOM_BOOTSTRAP_RETRY_AT=nil; scriptExists=false; timerExists=false; now=0");
-        Run(); Check(Count() == 4, "new map readiness");
+        Run(); Check(Count() == 5, "new map readiness");
     }
 
     static async Task TestGamemode()
@@ -258,14 +263,36 @@ internal static class Program
                 Feed("PHYS box_" + locale + " 1.25 -2.5 3.75 4.5 5.25 -6.75 KCOM");
                 Check(peerProxy.Sent.Any(r => r.data == "kcom_setlocation box_" + locale + " 1.25 -2.5 3.75 4.5 5.25 -6.75"), "physics culture " + locale);
                 AlyxGlobalData.instance.RemovePlayer(peerProxy.ID);
-                Map.map = "";
+                Map.map = "previous_map";
                 Feed("MAPN mp_kiwitest 4 KCOM");
-                Check(Map.map == "mp_kiwitest" && proxy.Sent.Any(r => r.data?.Contains("Detected map: mp_kiwitest") == true), "map detection " + locale);
+                Check(Map.map == "previous_map", "early map report ignored " + locale);
+                Feed("INIT KCOM");
+                Check(proxy.Sent.Count(r => r.data?.Contains("vscripts kcom_interval") == true) == 1, "duplicate INIT ignored");
+                Feed("IENT KCOM"); Feed("IENT KCOM");
+                await WaitFor(() => proxy.Sent.Any(r => r.data?.Contains("OnTimer>kcom_script") == true));
+                Check(proxy.Sent.Count(r => r.data?.Contains("OnTimer>kcom_script") == true) == 1, "duplicate IENT ignored");
+                Check(!proxy.Sent.Any(r => r.data?.Contains("初始化完成；") == true), "timer is not success");
+                foreach (string badReport in new[] { "MAPN KCOM", "MAPN mp_kiwitest KCOM", "MAPN mp_kiwitest nope KCOM", "MAPN mp_kiwitest 99 KCOM", "MAPN ../bad 4 KCOM", "MAPN test;quit 4 KCOM", "MAPN mp_kiwitest 4 KCOM extra" })
+                    Feed(badReport);
+                Check(Map.map == "previous_map", "bad reports do not change map");
+                Check(!proxy.Sent.Any(r => r.data?.Contains("初始化完成；") == true), "bad reports never signal success");
+                Check(proxy.Sent.Any(r => r.data?.Contains("API 版本不匹配") == true), "API mismatch diagnosis");
+                Feed("  MAPN   mp_kiwitest  4 KCOM  ");
+                Check(Map.map == "mp_kiwitest" && client.Map == "mp_kiwitest", "map detection " + locale);
+                Check(proxy.Sent.Count(r => r.data?.Contains("初始化完成；") == true) == 1, "confirmed success " + locale);
+                Feed("MAPN mp_kiwitest 4 KCOM");
+                Check(proxy.Sent.Count(r => r.data?.Contains("初始化完成；") == true) == 1, "duplicate MAPN ignored");
                 if (locale == "zh-CN")
                 {
-                    Feed("IENT KCOM");
-                    await Task.Delay(2800);
-                    Check(proxy.Sent.Any(r => r.data?.Contains("OnTimer>kcom_script") == true), "IENT timer chain");
+                    proxy.Sent.Clear();
+                    Feed("KRDY KCOM"); Feed("INIT KCOM"); Feed("IENT KCOM");
+                    Feed("KRDY KCOM"); // supersede the delayed timer attachment
+                    await Task.Delay(2750);
+                    Check(!proxy.Sent.Any(r => r.data?.Contains("OnTimer>kcom_script") == true), "old attempt does not attach timer");
+                    Feed("INIT KCOM"); Feed("IENT KCOM");
+                    _ = new AlyxGamemode.AlyxGamemode(GamemodeHandleType.ClientClose, clients, socket, "玩家");
+                    await Task.Delay(2750);
+                    Check(!proxy.Sent.Any(r => r.data?.Contains("OnTimer>kcom_script") == true), "disconnected attempt does not attach timer");
                 }
                 AlyxGlobalData.instance.RemovePlayer(proxy.ID);
                 clients.Clear(); proxy.Sent.Clear(); Feed("KRDY KCOM");
@@ -327,5 +354,10 @@ namespace KiwisCoOpMod
         public static Settings Default { get; } = new();
         public int VconsolePort { get; set; }
         public int VconsoleProtocol { get; set; } = 211;
+        public string ClientIpAddress { get; set; } = "127.0.0.1";
+        public int ClientPort { get; set; }
+        public string ClientUsername { get; set; } = "Tester";
+        public string ClientPassword { get; set; } = "";
+        public bool ClientPrintVconsole { get; set; }
     }
 }

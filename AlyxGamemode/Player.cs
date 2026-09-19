@@ -22,9 +22,14 @@ using System.Threading.Tasks;
 
 namespace AlyxGamemode
 {
+    public enum InitializationStage { None, AwaitInit, AwaitEntities, AwaitTimer, AwaitMap, Ready }
+
     public class Player : Location
     {
         public int Index = 0;
+        // Guard together with lock(player); delayed work belongs to exactly one attempt.
+        public int InitializationGeneration;
+        public InitializationStage InitializationStage;
         public IndexedClient Client;
         public Player(int index, IndexedClient client)
         {

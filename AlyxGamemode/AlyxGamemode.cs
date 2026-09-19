@@ -60,7 +60,12 @@ namespace AlyxGamemode
                             Player? player = AlyxGlobalData.instance.GetPlayer(closeSocket.ConnectionInfo.Id);
                             if (player != null)
                             {
-                                AlyxGlobalData.instance.RemovePlayer(closeSocket.ConnectionInfo.Id);
+                                lock (player)
+                                {
+                                    player.InitializationGeneration++;
+                                    player.InitializationStage = InitializationStage.None;
+                                    AlyxGlobalData.instance.RemovePlayer(closeSocket.ConnectionInfo.Id);
+                                }
                             }
                         }
                         break;
@@ -79,8 +84,6 @@ namespace AlyxGamemode
                                         if (response.data.Trim().Equals("KRDY KCOM", StringComparison.Ordinal))
                                         {
                                             if (!connections.Any(c => c.Session.ConnectionInfo.Id == socket.ConnectionInfo.Id)) break;
-                                            Response vconsoleInput = new("command", "ent_remove_all kcom_script;ent_remove_all kcom_timer;sv_cheats 1;echo INIT KCOM");
-                                            socket.Send(JsonConvert.SerializeObject(vconsoleInput));
                                             if (AlyxGlobalData.instance.GetPlayer(socket.ConnectionInfo.Id) == null)
                                             {
                                                 foreach (IndexedClient client in connections)
@@ -111,10 +114,26 @@ namespace AlyxGamemode
                                                     }
                                                 }
                                             }
+                                            Player? readyPlayer = AlyxGlobalData.instance.GetPlayer(socket.ConnectionInfo.Id);
+                                            if (readyPlayer != null)
+                                            {
+                                                lock (readyPlayer)
+                                                {
+                                                    readyPlayer.InitializationGeneration++;
+                                                    readyPlayer.InitializationStage = InitializationStage.AwaitInit;
+                                                    Response initialize = new("command", "sv_cheats 1;ent_remove_all kcom_script;ent_remove_all kcom_timer;echo INIT KCOM");
+                                                    socket.Send(JsonConvert.SerializeObject(initialize));
+                                                }
+                                            }
+                                        }
+                                        else if (response.data.Trim().Equals("KERR KCOM", StringComparison.Ordinal))
+                                        {
+                                            if (connections.Any(c => c.Session.ConnectionInfo.Id == socket.ConnectionInfo.Id))
+                                                socket.Send(new Response("status", "游戏脚本初始化尚未完成，正在重试。请检查本地 kiwimp_alyx addon 和 kcom_interval.lua；可打开“客户端：显示 VConsole”查看脚本错误。").ToString());
                                         }
                                         else if (response.data.Contains("KCOM"))
                                         {
-                                            List<string> packetList = response.data.Split(" ").ToList();
+                                            List<string> packetList = response.data.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).ToList();
                                             string packetType = packetList[0];
                                             packetList.Remove(packetType);
                                             Packet packet = new(packetType, packetList.ToArray());
@@ -227,21 +246,39 @@ namespace AlyxGamemode
                                                             }
                                                             break;
                                                         case PacketType.Initialization:
-                                                            Response vconsoleInput2 = new("command", "ent_create logic_script {targetname kcom_script vscripts kcom_interval};ent_create logic_timer {targetname kcom_timer refiretime 0.01};echo IENT KCOM");
-                                                            Response output3 = new("status", "Initializing co-op...");
-                                                            socket.Send(JsonConvert.SerializeObject(output3));
-                                                            socket.Send(JsonConvert.SerializeObject(vconsoleInput2));
+                                                            lock (player)
+                                                            {
+                                                                if (player.InitializationStage != InitializationStage.AwaitInit) break;
+                                                                player.InitializationStage = InitializationStage.AwaitEntities;
+                                                                socket.Send(new Response("status", "正在初始化联机，等待游戏脚本回报地图……").ToString());
+                                                                socket.Send(new Response("command", "ent_create logic_script {targetname kcom_script vscripts kcom_interval};ent_create logic_timer {targetname kcom_timer refiretime 0.01};echo IENT KCOM").ToString());
+                                                            }
                                                             break;
                                                         case PacketType.InitializedEntities:
-                                                            Thread thr = new(new ThreadStart(() =>
+                                                            lock (player)
                                                             {
-                                                                Thread.Sleep(2500);
-                                                                Response vconsoleInput5 = new("command", "buddha 1;unpause;ent_fire kcom_timer addoutput OnTimer>kcom_script>CallScriptFunction>KiwisCoOpMod>0>-1");
-                                                                Response output4 = new("status", "Co-op initialized!");
-                                                                socket.Send(JsonConvert.SerializeObject(output4));
-                                                                socket.Send(JsonConvert.SerializeObject(vconsoleInput5));
-                                                            }));
-                                                            thr.Start();
+                                                                if (player.InitializationStage != InitializationStage.AwaitEntities) break;
+                                                                player.InitializationStage = InitializationStage.AwaitTimer;
+                                                                int generation = player.InitializationGeneration;
+                                                                _ = Task.Run(async () =>
+                                                                {
+                                                                    await Task.Delay(2500);
+                                                                    try
+                                                                    {
+                                                                        Task send;
+                                                                        lock (player)
+                                                                        {
+                                                                            if (player.InitializationGeneration != generation ||
+                                                                                player.InitializationStage != InitializationStage.AwaitTimer ||
+                                                                                AlyxGlobalData.instance.GetPlayer(socket.ConnectionInfo.Id) != player || !socket.IsAvailable) return;
+                                                                            player.InitializationStage = InitializationStage.AwaitMap;
+                                                                            send = socket.Send(new Response("command", "buddha 1;unpause;ent_fire kcom_timer addoutput OnTimer>kcom_script>CallScriptFunction>KiwisCoOpMod>0>-1").ToString());
+                                                                        }
+                                                                        await send.ConfigureAwait(false);
+                                                                    }
+                                                                    catch (Exception e) { System.Diagnostics.Debug.WriteLine(e); }
+                                                                });
+                                                            }
                                                             break;
                                                         case PacketType.RightHandIndexes:
                                                         case PacketType.LeftHandIndexes:
@@ -272,33 +309,27 @@ namespace AlyxGamemode
                                                             }
                                                             break;
                                                         case PacketType.MapName:
-                                                            string suffix = "";
-                                                            /*
-                                                            if (packet.args[0] != player.Client.Map)
+                                                            if (packet.args.Length != 3 || packet.args[2] != "KCOM" ||
+                                                                !Map.TryNormalize(packet.args[0], out string detectedMap) ||
+                                                                !int.TryParse(packet.args[1], NumberStyles.None, CultureInfo.InvariantCulture, out int gamemodeAPIVersion))
                                                             {
-                                                                Response mapOutput = new("command", "addon_play " + packet.args[0] + "; addon_tools_map " + packet.args[0]);
-                                                                foreach (IndexedClient broadcast in connections)
-                                                                {
-                                                                    Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
-                                                                    if (keyValuePair != null && broadcast.Session.ConnectionInfo.Id != socket.ConnectionInfo.Id)
-                                                                    {
-                                                                        broadcast.Session.Send(JsonConvert.SerializeObject(mapOutput));
-                                                                    }
-                                                                }
-                                                                suffix = " - Telling all clients to switch...";
+                                                                socket.Send(new Response("status", "游戏返回的 MAPN 地图回报格式无效，尚未确认初始化成功。").ToString());
+                                                                break;
                                                             }
-                                                            */
-                                                            Response jingle = new("command", "play kcom/jingle_up2");
-                                                            Response output2 = new("status", "♫ Detected map: " + packet.args[0] + suffix);
-                                                            socket.Send(JsonConvert.SerializeObject(jingle));
-                                                            socket.Send(JsonConvert.SerializeObject(output2));
-                                                            int gamemodeAPIVersion = int.Parse(packet.args[1]);
                                                             if (gamemodeAPIVersion != APIVersion)
                                                             {
-                                                                Response versionOutput = new("status", "Version mismatch! This client reports API version " + APIVersion + ", gamemode reported API version " + gamemodeAPIVersion + ". Please update the client and respective Workshop addons.");
-                                                                socket.Send(JsonConvert.SerializeObject(versionOutput));
+                                                                socket.Send(new Response("status", "游戏脚本 API 版本不匹配：需要 " + APIVersion + "，收到 " + gamemodeAPIVersion + "。请更新 addon 脚本；尚未确认初始化成功。").ToString());
+                                                                break;
                                                             }
-                                                            Map.map = packet.args[0];
+                                                            lock (player)
+                                                            {
+                                                                if (player.InitializationStage != InitializationStage.AwaitMap) break;
+                                                                player.InitializationStage = InitializationStage.Ready;
+                                                                player.Client.Map = detectedMap;
+                                                                Map.map = detectedMap;
+                                                                socket.Send(new Response("command", "play kcom/jingle_up2").ToString());
+                                                                socket.Send(new Response("status", "联机初始化完成；已识别地图（Detected map）：" + detectedMap).ToString());
+                                                            }
                                                             break;
                                                         case PacketType.ButtonIndexStartPos:
                                                         case PacketType.ButtonPressIndex:

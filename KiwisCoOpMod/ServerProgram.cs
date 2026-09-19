@@ -53,11 +53,16 @@ namespace KiwisCoOpMod
         {
             if (wss == null)
             {
+                if (!Map.TryNormalize(Settings.Default.ServerMap, out string requestedMap))
+                {
+                    Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, Map.InvalidNameMessage));
+                    return;
+                }
                 PluginHandler.Handle(plugins, PluginHandleType.Server_PreGamemode_PreStart);
                 LuaEnvironment.instance.Handle(PluginHandleType.Server_PreGamemode_PreStart);
                 if (GamemodeHandler.Handle(type, GamemodeHandleType.PreStart) == HandleState.Continue)
                 {
-                    Map.map = Settings.Default.ServerMap;
+                    Map.map = requestedMap;
                     this.plugins = plugins;
 
                     PluginHandler.Handle(plugins, PluginHandleType.Server_PostGamemode_PreStart, type, plugins, Map.map);
@@ -118,8 +123,13 @@ namespace KiwisCoOpMod
         }
         public void ChangeMap(string map)
         {
-            Map.map = map;
-            Response output2 = new("command", "addon_play "+map+"; addon_tools_map "+map);
+            if (!Map.TryNormalize(map, out string requestedMap))
+            {
+                Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, Map.InvalidNameMessage));
+                return;
+            }
+            Map.map = requestedMap;
+            Response output2 = new("command", Map.LoadCommand(requestedMap));
             foreach (IndexedClient con in connections)
             {
                 con.Session.Send(JsonConvert.SerializeObject(output2));
