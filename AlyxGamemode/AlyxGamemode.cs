@@ -48,7 +48,7 @@ namespace AlyxGamemode
                             List<IndexedClient> openConnections = (List<IndexedClient>)vs[0];
                             IWebSocketConnection openSocket = (IWebSocketConnection)vs[1];
                             Player? player2 = AlyxGlobalData.instance.GetPlayer(openSocket.ConnectionInfo.Id);
-                            Response enableAddon = new("command", "addon_enable 2739356543");
+                            Response enableAddon = new("command", "addon_enable 2739356543;addon_enable kiwimp_alyx");
                             openSocket.Send(JsonConvert.SerializeObject(enableAddon));
                         }
                         break;
@@ -76,9 +76,10 @@ namespace AlyxGamemode
                                 case "print":
                                     if (response.data != null)
                                     {
-                                        if (response.data.Contains("has joined the game"))
+                                        if (response.data.Trim().Equals("KRDY KCOM", StringComparison.Ordinal))
                                         {
-                                            Response vconsoleInput = new("command", "ent_remove kcom_script;sv_cheats 1;echo INIT KCOM");
+                                            if (!connections.Any(c => c.Session.ConnectionInfo.Id == socket.ConnectionInfo.Id)) break;
+                                            Response vconsoleInput = new("command", "ent_remove_all kcom_script;ent_remove_all kcom_timer;sv_cheats 1;echo INIT KCOM");
                                             socket.Send(JsonConvert.SerializeObject(vconsoleInput));
                                             if (AlyxGlobalData.instance.GetPlayer(socket.ConnectionInfo.Id) == null)
                                             {
@@ -147,7 +148,7 @@ namespace AlyxGamemode
                                                                 float.Parse(packet.args[4], CultureInfo.InvariantCulture.NumberFormat),
                                                                 float.Parse(packet.args[5], CultureInfo.InvariantCulture.NumberFormat)
                                                             );
-                                                            Response teleport = new("command", "kcom_teleportangles " + TeleOrigin.X + " " + TeleOrigin.Y + " " + TeleOrigin.Z + " " + TeleAngles.Pitch + " " + TeleAngles.Yaw + " " + TeleAngles.Roll);
+                                                            Response teleport = new("command", "kcom_teleportangles " + TeleOrigin + " " + TeleAngles);
                                                             foreach (IndexedClient broadcastClient2 in connections)
                                                             {
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcastClient2.Session.ConnectionInfo.Id);
@@ -255,7 +256,7 @@ namespace AlyxGamemode
                                                         case PacketType.PhysicsObjectPosAng:
                                                             if (packet.args.Length >= 7)
                                                             {
-                                                                Entity entity = new(packet.args[0], float.Parse(packet.args[1]), float.Parse(packet.args[2]), float.Parse(packet.args[3]), float.Parse(packet.args[4]), float.Parse(packet.args[5]), float.Parse(packet.args[6]));
+                                                                Entity entity = new(packet.args[0], float.Parse(packet.args[1], CultureInfo.InvariantCulture), float.Parse(packet.args[2], CultureInfo.InvariantCulture), float.Parse(packet.args[3], CultureInfo.InvariantCulture), float.Parse(packet.args[4], CultureInfo.InvariantCulture), float.Parse(packet.args[5], CultureInfo.InvariantCulture), float.Parse(packet.args[6], CultureInfo.InvariantCulture));
                                                                 if (AlyxGlobalData.instance.AddManipulatedEntity(entity, socket.ConnectionInfo.Id, connections))
                                                                 {
                                                                     Response output4 = new("command", "kcom_setlocation " + packet.args[0] + " " + packet.args[1] + " " + packet.args[2] + " " + packet.args[3] + " " + packet.args[4] + " " + packet.args[5] + " " + packet.args[6]);

@@ -34,7 +34,7 @@ namespace KiwisCoOpModCore
         }
         public override string ToString()
         {
-            return Pitch + " " + Yaw + " " + Roll;
+            return FormattableString.Invariant($"{Pitch} {Yaw} {Roll}");
         }
     }
 }

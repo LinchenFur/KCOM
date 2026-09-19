@@ -35,11 +35,25 @@
 - Subscribe to the [Workshop Addon](https://steamcommunity.com/sharedfiles/filedetails/?id=2739356543) on Steam
 - Download the [latest release](https://github.com/TeamPopplio/KCOM/releases) from GitHub
 - Extract the contents of the zip file to a safe place (e.g. a new folder on your desktop)
-- Set the following launch options for Half-Life: Alyx in Steam: `-console -vconsole -language english`
+- Set the following launch options for Half-Life: Alyx in Steam: `-console -vconsole`
 - Launch the game
 - Open KCOM using `KiwisCoOpMod.exe`
 - Follow instructions within the KCOM application
 - KCOM is ready!
+
+## 游戏语言支持（本分支）
+
+- 新版本不再依赖英文 `has joined the game` 日志，启动参数使用 `-console -vconsole`，无需强制 `-language english`。游戏语言由你在 Steam 中自行选择；KCOM 界面仍为简体中文。
+- **所有参与联机的电脑都需要更新桌面程序与 addon 脚本，不要混用原版客户端。** 本分支协议版本为 1，旧版本为 0；版本不匹配时请停止测试并先更新。 将 `WorkshopAddon/game/hlvr_addons/kiwimp_alyx` 中的文件合并到 Alyx 的同名目录，尤其是新增的 `scripts/vscripts/kcom_bootstrap.lua`。仅安装原版 Workshop 包没有这个脚本。更新时保留编译地图、存档和用户配置。
+- 认证后程序每两秒探测本地玩家是否就绪；收到 `KRDY KCOM` 才沿用 INIT/IENT 初始化流程。进入新地图或建立新连接会重新检测，不依赖本地化提示。
+- VConsole 命令/输出使用 UTF-8，长度按字节计算；坐标按点号小数格式同步。协议关键字、地图名和实体名不翻译。
+- VConsole 连接失败依然意味着游戏同步不可用，不代表仅界面问题；先确认游戏已运行并关闭独立 VConsole 窗口，再启动 KCOM。
+
+### 验证范围
+
+运行 `dotnet run --project tests/LanguageSupport/LanguageSupport.csproj -c Release` 可测试多语言编码、长报文/分段读取、EOF/取消、回环 TCP/WebSocket 转发、Lua 就绪逻辑及不同区域的初始化/坐标同步。
+
+这些自动化测试不等于完整游戏内验证。中文游戏内仍需验证：初始化提示与地图识别、换图后重新初始化、重新连接，以及两台机器间头手/物体同步。当前分支尚未完成这些实机验收，也不保证所有地图和游戏字体均支持任意字符。
 
 ## Connecting to a Server
 - Follow the [instructions](#installation) to install KCOM
@@ -159,7 +173,7 @@ For addon development, you may want to "symlink" folders from this repository to
 - Copy the KCOM repository directory path and paste it into the command prompt
 - Type `\WorkshopAddon\content\hlvr_addons\kiwimp_alyx` at the end of the command prompt to complete the path and press enter
 - Launch Half-Life: Alyx with Workshop tools enabled 
-	- Type `-console -vconsole -language english` into the launch options for Half-Life: Alyx in Steam before launching
+	- Type `-console -vconsole` into the launch options for Half-Life: Alyx in Steam before launching
 - Open VConsole by pressing the tilde (`~`) key
 - Type `addon_enable kiwimp_alyx` into VConsole and press enter
 - Changes within the Workshop tools will now be reflected to the KCOM repository and vice versa

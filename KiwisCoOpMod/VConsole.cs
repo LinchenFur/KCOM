@@ -31,179 +31,128 @@ namespace KiwisCoOpMod
         private WebsocketClient? ws;
         private TcpClient? client;
         private NetworkStream? stream;
-        private bool killed = false;
-        private List<byte[]> commandQueue = new();
+        private readonly object writeLock = new();
         private StreamWatcher? watcher;
-        public VConsole()
-        {
-        }
+        private readonly List<byte[]> commandQueue = new();
+        private CancellationTokenSource? bootstrapCancellation;
+
         public bool Connect(WebsocketClient ws)
         {
             this.ws = ws;
             return Connect();
         }
+
         public bool Connect()
         {
-            WriteCommand("disconnect");
-            // Check if the port is listening before attempting to connect
-            System.Net.IPEndPoint[] endPoints = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
-            bool listening = false;
-            foreach (System.Net.IPEndPoint endPoint in endPoints)
+            Disconnect();
+            try
             {
-                if (endPoint.Port == Settings.Default.VconsolePort)
+                client = new TcpClient();
+                if (!client.ConnectAsync("127.0.0.1", Settings.Default.VconsolePort).Wait(2000))
                 {
-                    listening = true;
-                    break;
+                    Disconnect();
+                    return false;
                 }
-            }
-            if (!listening)
-                return false;
-            client = new TcpClient("127.0.0.1", Settings.Default.VconsolePort);
-            stream = client.GetStream();
-            watcher = new StreamWatcher(stream);
-            watcher.MessageAvailable += MessageAvailable;
-            if (watcher != null)
+                stream = client.GetStream();
+                stream.WriteTimeout = 2000;
+                watcher = new StreamWatcher(stream);
+                watcher.MessageAvailable += MessageAvailable;
                 watcher.SetWorking(true);
-            killed = false;
-            WriteWindowFocus(true);
-            if (stream != null)
-            {
-                foreach (byte[] command in commandQueue)
+                WriteWindowFocus();
+                lock (writeLock)
                 {
-                    stream.Write(command);
+                    foreach (byte[] command in commandQueue) stream.Write(command);
+                    commandQueue.Clear();
                 }
-                commandQueue.Clear();
+                return true;
             }
-            return true;
+            catch (Exception e) when (e is SocketException or IOException or AggregateException)
+            {
+                Debug.WriteLine(e);
+                Disconnect();
+                return false;
+            }
+        }
+
+        // Started only after WebSocket authentication. A new session also handles
+        // connecting to a map that was already running before KCOM was opened.
+        public void StartBootstrapProbe()
+        {
+            bootstrapCancellation?.Cancel();
+            bootstrapCancellation?.Dispose();
+            bootstrapCancellation = new CancellationTokenSource();
+            var token = bootstrapCancellation.Token;
+            var connectedStream = stream;
+            if (connectedStream == null) return;
+            string session = Guid.NewGuid().ToString("N");
+            string command = "sv_cheats 1;script KCOM_BOOTSTRAP_SESSION=\"" + session + "\";script_execute kcom_bootstrap";
+            byte[] frame = VConsoleProtocol.Command(command, Convert.ToByte(Settings.Default.VconsoleProtocol));
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    while (!token.IsCancellationRequested && watcher?.Completion.IsCompleted == false)
+                    {
+                        lock (writeLock)
+                        {
+                            if (token.IsCancellationRequested || stream != connectedStream) return;
+                            connectedStream.Write(frame);
+                        }
+                        await Task.Delay(2000, token).ConfigureAwait(false);
+                    }
+                }
+                catch (OperationCanceledException) when (token.IsCancellationRequested) { }
+                catch (Exception e) when (e is IOException or ObjectDisposedException)
+                {
+                    Debug.WriteLine(e);
+                }
+            }, token);
         }
 
         private void MessageAvailable(object sender, MessageAvailableEventArgs e)
         {
-            if(ws != null)
+            if (ws == null || e.MessageType != "PRNT") return;
+            foreach (string line in VConsoleProtocol.PrintLines(e.Data))
             {
-                string command = e.MessageType.ToUpper();
-                switch (command)
-                {
-                    case "PRNT":
-                        byte[] message = e.Data.Skip(30).SkipLast(1).ToArray();
-                        string newMessage = Encoding.ASCII.GetString(message).Replace("\n", "");
-                        if(newMessage != "" && !newMessage.Contains("Command buffer full"))
-                        {
-                            /*
-                            if (newMessage.Contains("Command buffer full"))
-                            {
-                                vcAmount += 1;
-                                if (vcAmount >= 10)
-                                {
-                                    //Reconnect();
-                                    vcAmount = 0;
-                                }
-                            }
-                            else
-                            {
-                            */
-                                Response input = new("print", newMessage);
-                                input.timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
-                                ws.Send(JsonConvert.SerializeObject(input));
-                            //}
-                        }
-                        break;
-                }
+                Response input = new("print", line);
+                input.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+                ws.Send(JsonConvert.SerializeObject(input));
             }
         }
 
-        /*
-        public void Reconnect()
-        {
-            killed = true;
-            if (stream != null)
-                stream.Close();
-            if (client != null)
-                client.Close();
-            if (watcher != null)
-                watcher.SetWorking(false);
-            client = new TcpClient("127.0.0.1", Settings.Default.VconsolePort);
-            stream = client.GetStream();
-            Connect();
-        }
-        */
-
         public void Disconnect()
         {
-            if(!killed)
+            bootstrapCancellation?.Cancel();
+            watcher?.SetWorking(false);
+            // Close before taking the send lock: unblock any pending network write.
+            client?.Close();
+            lock (writeLock)
             {
-                killed = true;
-                if (stream != null)
-                    stream.Close();
-                if (client != null)
-                    client.Close();
-                if (watcher != null)
-                    watcher.SetWorking(false);
+                stream = null;
+                client = null;
             }
         }
 
         public void WriteRaw(byte[] data)
         {
-            if (stream != null)
-                stream.Write(data);
+            lock (writeLock)
+            {
+                if (stream != null) stream.Write(data);
+            }
         }
 
         public void WriteWindowFocus(bool focused = true)
         {
-            if (stream != null)
-            {
-                byte[] vcmd = Encoding.ASCII.GetBytes("VFCS").Reverse().ToArray();
-                byte protocol = Convert.ToByte(Settings.Default.VconsoleProtocol);
-                byte dataLength = Convert.ToByte(13);
-                List<byte> dataList = new()
-                {
-                    0,
-                    protocol,
-                    0,
-                    0,
-                    0,
-                    dataLength,
-                    0,
-                    0,
-                    (byte)(focused == true ? 1 : 0)
-                };
-                foreach (byte cmdByte in vcmd)
-                {
-                    dataList = dataList.Prepend(cmdByte).ToList();
-                }
-                byte[] completeData = dataList.ToArray();
-                if (!killed)
-                    stream.Write(completeData);
-                else
-                    commandQueue.Add(completeData);
-            }
+            WriteRaw(VConsoleProtocol.Focus(focused, Convert.ToByte(Settings.Default.VconsoleProtocol)));
         }
+
         public void WriteCommand(string command, bool urgent = false)
         {
-            if (stream != null)
+            byte[] frame = VConsoleProtocol.Command(command, Convert.ToByte(Settings.Default.VconsoleProtocol));
+            lock (writeLock)
             {
-                byte[] vcmd = Encoding.ASCII.GetBytes("CMND").Reverse().ToArray();
-                byte[] data = Encoding.ASCII.GetBytes(command);
-                byte dataLength = Convert.ToByte(data.Length + 13);
-                byte protocol = Convert.ToByte(Settings.Default.VconsoleProtocol);
-                List<byte> dataList = new()
-                {
-                    0, protocol, 0, 0, 0, dataLength, 0, 0
-                };
-                foreach (byte cmdByte in vcmd)
-                {
-                    dataList = dataList.Prepend(cmdByte).ToList();
-                }
-                foreach (byte cmdByte in data)
-                {
-                    dataList = dataList.Append(cmdByte).ToList();
-                }
-                dataList.Add(0x00);
-                byte[] completeData = dataList.ToArray();
-                if (!killed)
-                    stream.Write(completeData);
-                else if (urgent)
-                    commandQueue.Add(completeData);
+                if (stream != null) stream.Write(frame);
+                else if (urgent) commandQueue.Add(frame);
             }
         }
     }

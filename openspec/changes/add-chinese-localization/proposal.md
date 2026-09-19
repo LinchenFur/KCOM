@@ -25,3 +25,7 @@ KCOM 当前客户端界面和内置联机提示主要为英文，对中文用户
 
 - 主要影响 `KiwisCoOpMod/UserInterface.Designer.cs`、`UserInterface.resx`、`ClientProgram.cs`、`ServerProgram.cs` 和 `base_scripts`。
 - 不新增依赖，不改变网络数据结构。
+
+## Follow-up: Game language support
+
+按用户追加要求，修复原项目 Issue #1：不再依赖英文入场日志；使用游戏脚本就绪标记；VConsole 文本使用 UTF-8 并正确处理完整帧长度、分段读取和 EOF；同步数字采用不变区域格式。不更改游戏语言设置，不引入翻译框架。更新桌面程序和本地 addon 脚本时保留地图与用户配置。

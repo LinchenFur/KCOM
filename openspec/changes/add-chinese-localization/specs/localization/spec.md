@@ -27,3 +27,29 @@ KCOM 主窗口 SHALL 使用简体中文显示面向用户的菜单、按钮、�
 - **WHEN** campaign checkpoint、等待玩家或重生提示显示
 - **THEN** 游戏内提示 SHALL 使用中文
 - **AND** 传输命令 SHALL 保持可执行格式
+
+### Requirement: Game initialization is language independent
+
+KCOM SHALL 通过固定协议标记而不是本地化入场提示初始化联机，且不强制修改游戏语言。
+
+#### Scenario: Player ready in any game language
+
+- **WHEN** 玩家在非英文或英文游戏中进入地图并完成认证
+- **THEN** 有效本地玩家 SHALL 触发 KRDY/INIT/IENT 初始化链
+- **AND** 自然语言日志 SHALL NOT 触发初始化
+- **AND** 换图和新客户端会话 SHALL 可再次初始化而不累计计时器
+
+### Requirement: Console transport preserves Unicode and framing
+
+KCOM SHALL 按 UTF-8 字节长度收发控制台文本，并按完整报文处理流。
+
+#### Scenario: Long multilingual output crosses TCP reads
+
+- **WHEN** 中文、日文或俄文 PRNT 报文超过 255 字节并跨越多次读取
+- **THEN** 文本 SHALL 完整保留，紧随的 KCOM 标记 SHALL 被独立识别
+- **AND** EOF、截断或非法长度 SHALL 终止读取而不是忙循环
+
+#### Scenario: Numeric synchronization in comma-decimal locales
+
+- **WHEN** 主机区域使用逗号作为小数分隔符
+- **THEN** 坐标和角度 SHALL 仍按点号解析及输出

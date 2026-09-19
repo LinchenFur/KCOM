@@ -99,7 +99,7 @@ namespace AlyxGamemode
         }
         private static PacketType ParseType(string type)
         {
-            return type.ToUpper() switch
+            return type.ToUpperInvariant() switch
             {
                 "PLYR" => PacketType.PlayerPosAng,
                 "HEAD" => PacketType.HeadPosAng,

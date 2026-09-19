@@ -70,7 +70,6 @@ namespace KiwisCoOpMod
                     ReconnectTimeout = TimeSpan.FromSeconds(60),
                     IsReconnectionEnabled = false
                 };
-                ws.Start();
                 ws.DisconnectionHappened.Subscribe(info =>
                 {
                     ui.Invoke(() => ui.LogToOutput(channel, "已断开连接：" + info.Type.ToString()));
@@ -98,9 +97,11 @@ namespace KiwisCoOpMod
                                     if (map != response.map)
                                     {
                                         ui.Invoke(() => ui.LogToOutput(channel, "正在切换地图：" + response.map));
+                                        vConsole.WriteCommand("addon_enable 2739356543;addon_enable kiwimp_alyx");
                                         vConsole.WriteCommand("addon_play " + response.map + ";addon_tools_map " + response.map);
                                         map = response.map;
                                     }
+                                    vConsole.StartBootstrapProbe();
                                 }
                                 break;
                             case "chat":
@@ -152,6 +153,7 @@ namespace KiwisCoOpMod
                     ws.Send(JsonConvert.SerializeObject(input));
                     ui.Invoke(() => ui.LogToOutput(channel, "客户端尝试连接到 IP：" + Settings.Default.ClientIpAddress + ":" + Settings.Default.ServerPort));
                 });
+                ws.Start();
                 ConnectVConsole(ws);
                 PluginHandler.Handle(plugins, PluginHandleType.Client_PostStart, ui, ws, error);
                 LuaEnvironment.instance.Handle(PluginHandleType.Client_PostStart, ui, ws, error);

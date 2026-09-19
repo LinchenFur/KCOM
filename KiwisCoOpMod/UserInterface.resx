@@ -60,7 +60,8 @@
   <data name="richTextBoxOutput.Text" xml:space="preserve">
     <value>欢迎使用 Kiwi 的《半条命：Alyx》联机模组！
 请确保《半条命：Alyx》使用以下启动参数：
--console -vconsole -language english
+-console -vconsole
+游戏可保留自己的语言设置；请同时安装新版 kiwimp_alyx 游戏脚本。
 启动 KCOM 时，请确保 VConsole 窗口未打开。
 如需帮助，请访问上方“帮助”菜单中的 Discord 社区。
 感谢你关注 KCOM，祝你游戏愉快！

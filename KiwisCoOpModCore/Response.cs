@@ -30,7 +30,7 @@ namespace KiwisCoOpModCore
         public string? remoteClientUsername;
         public string? clientUsername;
         public string? password;
-        public readonly static int internalVersion = 0;
+        public readonly static int internalVersion = 1; // Language-independent readiness handshake.
         public int? version = internalVersion;
         public bool urgent;
         public long? timestamp;
