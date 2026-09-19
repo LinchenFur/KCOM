@@ -1,4 +1,4 @@
-﻿/*
+/*
     Kiwi's Co-Op Mod for Half-Life: Alyx
     Copyright (c) 2022 KiwifruitDev
     All rights reserved.
@@ -19,6 +19,7 @@ using Fleck;
 using System.Diagnostics;
 using Newtonsoft.Json;
 using System.Reflection;
+using System.Text;
 
 namespace KiwisCoOpMod
 {
@@ -29,6 +30,7 @@ namespace KiwisCoOpMod
         public LuaEnvironment()
         {
             lua = new();
+            lua.State.Encoding = Encoding.UTF8;
             lua.LoadCLRPackage();
             // Just in case the front-end Lua scripts don't implement __init.lua
             lua.DoString(@"
