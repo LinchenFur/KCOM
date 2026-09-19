@@ -55,7 +55,7 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
                 if not arg1.timestamp then return end
                 -- Getting ping time (ms)
                 local ping = (DateTime.UtcNow:Subtract(DateTime.UnixEpoch).TotalMilliseconds - arg1.timestamp) 
-                local pingMsg = Response("status", "Pong! " .. math.floor(ping+0.5) .. "ms")
+                local pingMsg = Response("status", "延迟：" .. math.floor(ping+0.5) .. "ms")
                 arg3:Send(pingMsg:ToString())
                 arg1.type = "lua_chat_handled"
             -- Help command
@@ -69,7 +69,7 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
             -- List command
             elseif arg1.data == "/list" then
                 if not arg2 or not arg3 then return end
-                local list = Response("status", "- Players: -")
+                local list = Response("status", "- 玩家列表：-")
                 arg3:Send(list:ToString())
                 for i = 0, arg2.Count - 1 do
                     local player = Response("status", arg2[i].Username)
@@ -157,7 +157,7 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
         -- Echo command
         if arg1[0] == "echo" then
             if arg1.Count < 2 then
-                print("Usage: 'echo <message>'")
+                print("用法：'echo <消息>'")
                 return
             end
             print(arg1[1])
@@ -169,31 +169,31 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
         elseif arg1[0] == "pset"
             or arg1[0] == "persistent_set" then
             if arg1.Count < 3 then
-                print("Usage: 'pset <key> <value>'")
+                print("用法：'pset <key> <value>'")
                 return
             end
             lua_env.persistence[arg1[1]] = arg1[2]
-            print("Set " .. arg1[1] .. " to " .. arg1[2])
+            print("已将 " .. arg1[1] .. " 设置为 " .. arg1[2])
         -- Get a persistent variable
         elseif arg1[0] == "pget"
             or arg1[0] == "persistent_get" then
             if arg1.Count < 2 then
-                print("Usage: 'pget <key>'")
+                print("用法：'pget <key>'")
                 return
             end
             local persistentVar = lua_env.persistence[arg1[1]]
             if persistentVar then
                 print(arg1[1] .. " = " .. persistentVar)
             else
-                print("Key not found")
+                print("未找到键")
             end
         -- Get persistent keys
         elseif arg1[0] == "pgetall"
             or arg1[0] == "persistent_get_all" then
-            print("- Persistent variables: -")
+            print("- 持久化变量：-")
             for k, v in pairs(lua_env.persistence) do
                 if type(v) == "table" then
-                    print(k .. " = *table*")
+                    print(k .. " = *表*")
                 else
                     print(k .. " = " .. v)
                 end
@@ -203,56 +203,56 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
         elseif arg1[0] == "premove"
             or arg1[0] == "persistent_remove" then
             if not arg1[1] then
-                print("Usage: 'persistent_remove <key>'")
+                print("用法：'persistent_remove <key>'")
                 return
             end
             lua_env.persistence[arg1[1]] = nil
-            print("Removed " .. arg1[1])
+            print("已删除 " .. arg1[1])
         -- Clear all persistent variables
         elseif arg1[0] == "pclear"
             or arg1[0] == "persistent_clear" then
             lua_env.persistence = {}
-            print("Cleared persistent variables")
+            print("已清除持久化变量")
         -- Script refresh
         elseif arg1[0] == "srefresh"
             or arg1[0] == "script_refresh" then
             if arg1.Count < 2 then
-                print("Usage: 'script_refresh <script>'")
+                print("用法：'script_refresh <script>'")
                 return
             end
             refresh("scripts/" .. arg1[1] .. ".lua")
-            print("Refreshed " .. arg1[1])
+                print("已刷新脚本 " .. arg1[1])
         -- Script refresh all
         elseif arg1[0] == "srefreshall"
             or arg1[0] == "script_refresh_all" then
             refresh_all()
-            print("Refreshed all scripts")
+            print("已刷新所有脚本")
         -- Kick a player
         elseif arg1[0] == "kick" then
             if not arg2 then return end
             if arg1.Count < 2 then
-                print("Usage: 'kick <username>'")
+                print("用法：'kick <username>'")
                 return
             end
             for i = 0, arg2.Count - 1 do
                 if arg2[i].Username == arg1[1] then
                     arg2[i].Session:Close()
-                    print("Kicked " .. arg1[1])
+                    print("已踢出 " .. arg1[1])
                     return
                 end
             end
-            print("Player not found")
+            print("未找到玩家")
         -- Ban a player
         elseif arg1[0] == "ban" then
             if not arg2 then return end
             if arg1.Count < 2 then
-                print("Usage: 'ban <username>'")
+                print("用法：'ban <username>'")
                 return
             end
             -- Check if player is already banned
             for k, v in pairs(lua_env.persistence["configjson"].bans) do
                 if v == arg1[1] then
-                    print("Player is already banned")
+                    print("玩家已被封禁")
                     return
                 end
             end
@@ -264,16 +264,16 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
                     local file = io.open("config.json", "w")
                     file:write(json.encode(lua_env.persistence["configjson"]))
                     file:close()
-                    print("Banned " .. arg1[1])
+                    print("已封禁 " .. arg1[1])
                     return
                 end
             end
-            print("Player not found")
+            print("未找到玩家")
         -- IP ban a player by username
         elseif arg1[0] == "ipban" then
             if not arg2 then return end
             if arg1.Count < 2 then
-                print("Usage: 'ipban <username>'")
+                print("用法：'ipban <username>'")
                 return
             end
             for i = 0, arg2.Count - 1 do
@@ -281,7 +281,7 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
                     -- Check if player is already banned
                     for k, v in pairs(lua_env.persistence["configjson"].ipbans) do
                         if v == arg2[i].Session.ConnectionInfo.ClientIpAddress then
-                            print("Player is already banned by IP address")
+                            print("玩家已被 IP 地址封禁")
                             return
                         end
                     end
@@ -291,15 +291,15 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
                     local file = io.open("config.json", "w")
                     file:write(json.encode(lua_env.persistence["configjson"]))
                     file:close()
-                    print("Banned " .. arg1[1] .. " by IP address")
+                    print("已按 IP 地址封禁 " .. arg1[1])
                     return
                 end
             end
-            print("Player not found")
+            print("未找到玩家")
         -- Unban a player
         elseif arg1[0] == "unban" then
             if arg1.Count < 2 then
-                print("Usage: 'unban <username>'")
+                print("用法：'unban <username>'")
                 return
             end
             local done = false
@@ -318,7 +318,7 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
                     local file = io.open("bans.json", "w")
                     file:write(json.encode(lua_env.persistence["configjson"].bans))
                     file:close()
-                    print("Unbanned " .. arg1[1])
+                    print("已解封 " .. arg1[1])
                     break
                 end
             end
@@ -337,17 +337,17 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
                     local file = io.open("ipbans.json", "w")
                     file:write(json.encode(lua_env.persistence["configjson"].ipbans))
                     file:close()
-                    print("Unbanned " .. arg1[1] .. " by IP address")
+                    print("已按 IP 地址解封 " .. arg1[1])
                     break
                 end
             end
             if not done then
-                print("Player not found")
+                print("未找到玩家")
             end
         -- Execute lua code
         elseif arg1[0] == "lua" then
             if arg1.Count < 2 then
-                print("Usage: 'lua <code>'")
+                print("用法：'lua <code>'")
                 return
             end
             local code = arg1[1]
@@ -359,7 +359,7 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
         elseif arg1[0] == "tp" then
             if not arg2 then return end
             if arg1.Count < 2 then
-                print("Usage: 'tp <username> (<username>/<x> <y> <z>)'")
+                print("用法：'tp <username> (<username>/<x> <y> <z>)'")
                 return
             end
             if arg1.Count < 5 then
@@ -368,12 +368,12 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
                         for j = 0, arg2.Count - 1 do
                             if arg2[j].Username == arg1[2] then
                                 if not lua_env.persistence["players"][arg1[2]] then
-                                    print("Invalid player")
+                                    print("无效玩家")
                                     return
                                 end
                                 local teleresp = Response("command", "kcom_teleport " .. lua_env.persistence["players"][arg1[2]].origin.x .. " " .. lua_env.persistence["players"][arg1[2]].origin.y .. " " .. lua_env.persistence["players"][arg1[2]].origin.z)
                                 arg2[i].Session:Send(teleresp:ToString())
-                                print("Teleported " .. arg1[1] .. " to " .. arg1[2])
+                                print("已将 " .. arg1[1] .. " 传送到 " .. arg1[2])
                                 return
                             end
                         end
@@ -385,17 +385,17 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
                 for i = 0, arg2.Count - 1 do
                     if arg2[i].Username == arg1[1] then
                         arg2[i].Session:Send(teleresp:ToString())
-                        print("Teleported " .. arg1[1] .. " to " .. arg1[2] .. " " .. arg1[3] .. " " .. arg1[4])
+                        print("已将 " .. arg1[1] .. " 传送到 " .. arg1[2] .. " " .. arg1[3] .. " " .. arg1[4])
                         return
                     end
                 end
             end
-            print("Player not found")
+            print("未找到玩家")
         -- Teleport all players to a location
         elseif arg1[0] == "tpall" then
             if not arg2 then return end
             if arg1.Count < 2 then
-                print("Usage: 'tpall (<username>/<x> <y> <z>)'")
+                print("用法：'tpall (<username>/<x> <y> <z>)'")
                 return
             end
             if arg1.Count < 4 then
@@ -405,22 +405,22 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
                         for j = 0, arg2.Count - 1 do
                             arg2[j].Session:Send(teleresp:ToString())
                         end
-                        print("Teleported all players to " .. arg1[1])
+                        print("已将所有玩家传送到 " .. arg1[1])
                         return
                     end
                 end
-                print("Player not found")
+                print("未找到玩家")
             else
                 local teleresp = Response("command", "kcom_teleport " .. arg1[2] .. " " .. arg1[3] .. " " .. arg1[4])
                 for i = 0, arg2.Count - 1 do
                     arg2[i].Session:Send(teleresp:ToString())
                 end
-                print("Teleported all players to " .. arg1[2] .. " " .. arg1[3] .. " " .. arg1[4])
+                print("已将所有玩家传送到 " .. arg1[2] .. " " .. arg1[3] .. " " .. arg1[4])
             end
         -- Set subgamemode type
         elseif arg1[0] == "subgamemode" then
             if arg1.Count < 2 then
-                print("Usage: 'subgamemode <type>'")
+                print("用法：'subgamemode <type>'")
                 return
             end
             if lua_config.sub_gamemodes[arg1[1]] then
@@ -428,9 +428,9 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
                 local file = io.open("config.json", "w")
                 file:write(json.encode(lua_env.persistence["configjson"]))
                 file:close()
-                print("Subgamemode set to " .. arg1[1])
+                print("子游戏模式已设置为 " .. arg1[1])
             else
-                print("Invalid subgamemode")
+                print("无效的子游戏模式")
             end
         end
     elseif handleType == "Server_PreGamemode_ClientOpen" then
@@ -438,7 +438,7 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
         -- Username ban check
         for k, v in pairs(lua_env.persistence["configjson"].bans) do
             if v == arg3 then
-                local bannedMsg = Response("status", "You are banned")
+                local bannedMsg = Response("status", "你已被封禁")
                 arg2:Send(bannedMsg:ToString())
                 arg2:Close()
                 return
@@ -447,7 +447,7 @@ lua_env.handlers[lua_env.persistence["script_basic"]] = function(handleType, arg
         -- IP ban check
         for k, v in pairs(lua_env.persistence["configjson"].ipbans) do
             if v == arg2.ConnectionInfo.ClientIpAddress then
-                local bannedMsg = Response("status", "You are banned by IP address")
+                local bannedMsg = Response("status", "你已被 IP 地址封禁")
                 arg2:Send(bannedMsg:ToString())
                 arg2:Close()
                 return

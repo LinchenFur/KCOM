@@ -31,9 +31,9 @@ namespace KiwisCoOpMod
     {
         private WebsocketClient? ws;
         private readonly UserInterface ui;
-        private readonly Channel channel = new("CL", "Client", Color.Green);
-        private readonly Channel chatChannel = new("CHAT", "Chat", Color.Black);
-        private readonly Channel statusChannel = new("STATUS", "Status", Color.DeepPink);
+        private readonly Channel channel = new("CL", "客户端", Color.Green);
+        private readonly Channel chatChannel = new("CHAT", "聊天", Color.Black);
+        private readonly Channel statusChannel = new("STATUS", "状态", Color.DeepPink);
         private readonly Channel vConsoleChannel = new("VC", "VConsole", Color.Maroon);
         private readonly VConsole? vConsole = new();
         private List<Type> plugins = new();
@@ -48,17 +48,17 @@ namespace KiwisCoOpMod
         {
             if (ws != null && vConsole != null)
             {
-                ui.Invoke(() => ui.LogToOutput(channel, "Connecting to VConsole using port " + Settings.Default.VconsolePort));
+                ui.Invoke(() => ui.LogToOutput(channel, "正在通过端口连接 VConsole：" + Settings.Default.VconsolePort));
                 if (!vConsole.Connect(ws))
                 {
                     ui.Invoke(() =>
                     {
-                        ui.LogToOutput(channel, "Failed to connect to VConsole");
-                        DialogResult res = MessageBox.Show("An error occured while connecting to VConsole.\nMake sure that Half-Life: Alyx is open.\nWould you like to re-connect?", "Error", MessageBoxButtons.YesNo);
+                        ui.LogToOutput(channel, "连接 VConsole 失败");
+                        DialogResult res = MessageBox.Show("连接 VConsole 时发生错误。\n请确认《半条命：Alyx》已启动。\n是否重新连接？", "错误", MessageBoxButtons.YesNo);
                         if (res == DialogResult.Yes)
                             ConnectVConsole(ws);
                         else
-                            ui.Invoke(() => ui.LogToOutput(channel, "Disconnected from VConsole"));
+                            ui.Invoke(() => ui.LogToOutput(channel, "已断开 VConsole 连接"));
                     });
                 }
             }
@@ -80,7 +80,7 @@ namespace KiwisCoOpMod
                 ws.Start();
                 ws.DisconnectionHappened.Subscribe(info =>
                 {
-                    ui.Invoke(() => ui.LogToOutput(channel, "Disconnected: " + info.Type.ToString()));
+                    ui.Invoke(() => ui.LogToOutput(channel, "已断开连接：" + info.Type.ToString()));
                 });
                 ws.MessageReceived.Subscribe(msg =>
                 {
@@ -94,17 +94,17 @@ namespace KiwisCoOpMod
                             case "authenticated":
                                 if (response.version > Response.internalVersion)
                                 {
-                                    ui.Invoke(() => ui.LogToOutput(channel, "Client is running an older version! Please update your client."));
+                                    ui.Invoke(() => ui.LogToOutput(channel, "客户端版本较旧！请更新客户端。"));
                                 }
                                 else if (response.version < Response.internalVersion)
                                 {
-                                    ui.Invoke(() => ui.LogToOutput(channel, "Server is running an older version! Please ask the owner to update their server."));
+                                    ui.Invoke(() => ui.LogToOutput(channel, "服务器版本较旧！请联系服务器主机更新。"));
                                 }
                                 if (vConsole != null && response.map != null)
                                 {
                                     if (map != response.map)
                                     {
-                                        ui.Invoke(() => ui.LogToOutput(channel, "Changing map to " + response.map));
+                                        ui.Invoke(() => ui.LogToOutput(channel, "正在切换地图：" + response.map));
                                         vConsole.WriteCommand("addon_play " + response.map + ";addon_tools_map " + response.map);
                                         map = response.map;
                                     }
@@ -137,7 +137,7 @@ namespace KiwisCoOpMod
                                 }
                                 break;
                             default:
-                                ui.Invoke(() => ui.LogToOutput(channel, "UNIMPLEMENTED TYPE: " + response.type + "!"));
+                                ui.Invoke(() => ui.LogToOutput(channel, "未实现的消息类型：" + response.type + "!"));
                                 break;
                         }
                         PluginHandler.Handle(plugins, PluginHandleType.Client_PostResponse, response);
@@ -145,7 +145,7 @@ namespace KiwisCoOpMod
                     }
                     else
                     {
-                        ui.Invoke(() => ui.LogToOutput(channel, "SERVER SENT INVALID DATA!"));
+                        ui.Invoke(() => ui.LogToOutput(channel, "服务器发送了无效数据！"));
                     }
                 });
                 ws.ReconnectionHappened.Subscribe(recinfo =>
@@ -157,7 +157,7 @@ namespace KiwisCoOpMod
                         timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds
                     };
                     ws.Send(JsonConvert.SerializeObject(input));
-                    ui.Invoke(() => ui.LogToOutput(channel, "Client attempted connection to IP " + Settings.Default.ClientIpAddress + ":" + Settings.Default.ServerPort));
+                    ui.Invoke(() => ui.LogToOutput(channel, "客户端尝试连接到 IP：" + Settings.Default.ClientIpAddress + ":" + Settings.Default.ServerPort));
                 });
                 ConnectVConsole(ws);
                 PluginHandler.Handle(plugins, PluginHandleType.Client_PostStart, ui, ws, error);
@@ -173,7 +173,7 @@ namespace KiwisCoOpMod
                 ws.Stop(System.Net.WebSockets.WebSocketCloseStatus.NormalClosure, "Closed by KCOM.");
                 ws.Dispose();
                 ws = null;
-                ui.Invoke(() => ui.LogToOutput(channel, "Client closed"));
+                ui.Invoke(() => ui.LogToOutput(channel, "客户端已关闭"));
             }
             if (vConsole != null)
             {

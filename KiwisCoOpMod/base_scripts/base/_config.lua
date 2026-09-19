@@ -24,51 +24,51 @@ lua_config.sub_gamemode = "campaign"
 -- An introduction message to be sent to a player when they join the server
 lua_config.client_introduction_message = {
     "-----------------------------",
-    "Welcome to my server!",
-    "This is a server for Half-Life: Alyx.",
-    "Type /help for a list of commands.",
-    "There ~areis ~playercount player~plural on ~map (~gamemode/~subgamemode)",
-    "Enjoy your stay here!",
+    "欢迎来到我的服务器！",
+    "这是一个《半条命：Alyx》服务器。",
+    "输入 /help 查看命令列表。",
+    "当前地图 ~map 上共有 ~playercount 名玩家（~gamemode/~subgamemode）",
+    "祝你游戏愉快！",
     "-----------------------------",
 }
 
 -- Gamemode types
 lua_config.gamemodes = {
-    ["AlyxGamemode"] = "Half-Life: Alyx",
-    ["CampaignGamemode"] = "Campaign Gamemode",
-    ["CoreGamemode"] = "Core Gamemode",
+    ["AlyxGamemode"] = "《半条命：Alyx》",
+    ["CampaignGamemode"] = "战役模式",
+    ["CoreGamemode"] = "核心模式",
 }
 
 lua_config.sub_gamemodes = {}
 
 -- The output of the /help command
 lua_config.client_helptable = {
-    "- Command help: -",
-    "/echo <message> - Echo a message.",
-    "/ping - Check your ping.",
-    "/help - This help menu.",
-    "/list - List all players on the server.",
-    "/vc - Enter a VConsole command.",
+    "- 命令帮助：-",
+    "/echo <message> - 回显消息。",
+    "/ping - 查看延迟。",
+    "/help - 显示帮助菜单。",
+    "/list - 列出服务器上的所有玩家。",
+    "/vc - 输入 VConsole 命令。",
     "--------------------",
 }
 
 -- The output of the "help" internal server command
 lua_config.server_helptable = {
-    "- Command help: -",
-    "echo <message> - Echo a message.",
-    "persistent_set <key> <value> - Set a persistent Lua value.",
-    "persistent_get <key> - Get a persistent Lua value.",
-    "persistent_remove <key> - Remove a persistent Lua value.",
-    "persistent_get_all - List all persistent Lua values.",
-    "persistent_clear - Clear all persistent Lua values.",
-    "script_refresh <script> - Refresh a Lua script.",
-    "script_refresh_all - Refresh all Lua scripts.",
-    "kick <username> - Kick a player from the server.",
-    "ban <username> - Ban a player from the server.",
-    "ipban <username> - Ban a player from the server by IP.",
-    "unban <username> - Remove a player's ban from the server.",
-    "lua <code> - Run Lua code.",
-    "tp <username> (<username>/<x> <y> <z>) - Teleport a player to a location.",
-    "tpall (<username>/<x> <y> <z>) - Teleport all players to a location.",
+    "- 命令帮助：-",
+    "echo <message> - 回显消息。",
+    "persistent_set <key> <value> - 设置持久化 Lua 值。",
+    "persistent_get <key> - 获取持久化 Lua 值。",
+    "persistent_remove <key> - 删除持久化 Lua 值。",
+    "persistent_get_all - 列出所有持久化 Lua 值。",
+    "persistent_clear - 清除所有持久化 Lua 值。",
+    "script_refresh <script> - 刷新 Lua 脚本。",
+    "script_refresh_all - 刷新所有 Lua 脚本。",
+    "kick <username> - 将玩家踢出服务器。",
+    "ban <username> - 封禁玩家。",
+    "ipban <username> - 按 IP 封禁玩家。",
+    "unban <username> - 解封玩家。",
+    "lua <code> - 执行 Lua 代码。",
+    "tp <username> (<username>/<x> <y> <z>) - 将玩家传送到指定位置。",
+    "tpall (<username>/<x> <y> <z>) - 将所有玩家传送到指定位置。",
     "--------------------",
 }

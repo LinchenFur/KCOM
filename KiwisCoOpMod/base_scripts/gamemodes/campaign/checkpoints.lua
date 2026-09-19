@@ -71,7 +71,7 @@ lua_env.handlers[lua_env.persistence["script_checkpoints"]] = function(handleTyp
             if health <= 1 and campaign_config.respawn then -- Buddha mode
                 if lastcheckpoint then -- Teleport to last checkpoint
                     local teleportPlayer = Response("command", "kcom_teleport " .. lastcheckpoint.x .. " " .. lastcheckpoint.y .. " " .. lastcheckpoint.z)
-                    local healPlayer = Response("command", "kcom_sethealth 100;ent_fire kcom_hud setmessage \"Respawned at last checkpoint!\"")
+                    local healPlayer = Response("command", "kcom_sethealth 100;ent_fire kcom_hud setmessage \"已在上一个检查点重生！\"")
                     player.Session:Send(teleportPlayer:ToString())
                     player.Session:Send(healPlayer:ToString())
                     lua_env.persistence["checkpoint_start_time"] = os.time()
@@ -79,7 +79,7 @@ lua_env.handlers[lua_env.persistence["script_checkpoints"]] = function(handleTyp
                     local randomPlayer = allPlayers[math.random(0, allPlayers.Count - 1)]
                     local randomPlayerTable = lua_env.persistence["players"][randomPlayer.Username]
                     local teleportPlayer = Response("command", "kcom_teleport " .. randomPlayerTable.origin.x .. " " .. randomPlayerTable.origin.y .. " " .. randomPlayerTable.origin.z)
-                    local healPlayer = Response("command", "kcom_sethealth 100;ent_fire kcom_hud setmessage \"Respawned at " .. randomPlayer.Username .. "!\"")
+                    local healPlayer = Response("command", "kcom_sethealth 100;ent_fire kcom_hud setmessage \"已在 " .. randomPlayer.Username .. " 附近重生！\"")
                     player.Session:Send(teleportPlayer:ToString())
                     player.Session:Send(healPlayer:ToString())
                 end
@@ -105,8 +105,8 @@ lua_env.handlers[lua_env.persistence["script_checkpoints"]] = function(handleTyp
             for i = 0, allPlayers.Count - 1 do
                 local player = allPlayers[i]
                 if not player then break end
-                local teleportPlayer = Response("command", "kcom_cache_all_entities;kcom_teleport " .. checkpoint.x .. " " .. checkpoint.y .. " " .. checkpoint.z..";ent_fire kcom_hud setmessage \"Checkpoint " .. lua_env.persistence["checkpoint_index"] .. "/" .. #lua_env.persistence["checkpoints"][map] .. " reached!\"")
-                local checkpointStatus = Response("status", "Checkpoint " .. lua_env.persistence["checkpoint_index"] .. "/" .. #lua_env.persistence["checkpoints"][map] .. " reached!")
+                local teleportPlayer = Response("command", "kcom_cache_all_entities;kcom_teleport " .. checkpoint.x .. " " .. checkpoint.y .. " " .. checkpoint.z..";ent_fire kcom_hud setmessage \"检查点 " .. lua_env.persistence["checkpoint_index"] .. "/" .. #lua_env.persistence["checkpoints"][map] .. " 已到达！\"")
+                local checkpointStatus = Response("status", "检查点 " .. lua_env.persistence["checkpoint_index"] .. "/" .. #lua_env.persistence["checkpoints"][map] .. " 已到达！")
                 player.Session:Send(teleportPlayer:ToString())
                 player.Session:Send(checkpointStatus:ToString())
             end

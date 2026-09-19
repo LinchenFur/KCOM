@@ -58,12 +58,12 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="richTextBoxOutput.Text" xml:space="preserve">
-    <value>Welcome to Kiwi's Co-Op Mod for Half-Life: Alyx!
-Ensure that Half-Life: Alyx uses these launch parameters:
+    <value>欢迎使用 Kiwi 的《半条命：Alyx》联机模组！
+请确保《半条命：Alyx》使用以下启动参数：
 -console -vconsole -language english
-When starting KCOM, make sure that the VConsole window is not open.
-For help/support, please visit the Discord server linked in the "Help" menu above.
-Thank you for your interest in KCOM, enjoy!
+启动 KCOM 时，请确保 VConsole 窗口未打开。
+如需帮助，请访问上方“帮助”菜单中的 Discord 社区。
+感谢你关注 KCOM，祝你游戏愉快！
 ===========================================================================================</value>
   </data>
   <metadata name="menuStrip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">

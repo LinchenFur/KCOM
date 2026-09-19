@@ -138,27 +138,27 @@ namespace KiwisCoOpMod
             this.closeToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
+            this.fileToolStripMenuItem.Text = "文件";
             // 
             // uPnPToolStripMenuItem
             // 
             this.uPnPToolStripMenuItem.Name = "uPnPToolStripMenuItem";
             this.uPnPToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
-            this.uPnPToolStripMenuItem.Text = "Forward Port via UPnP";
+            this.uPnPToolStripMenuItem.Text = "通过 UPnP 转发端口";
             this.uPnPToolStripMenuItem.Click += new System.EventHandler(this.UPnPToolStripMenuItem_Click);
             // 
             // saveOptionsToolStripMenuItem
             // 
             this.saveOptionsToolStripMenuItem.Name = "saveOptionsToolStripMenuItem";
             this.saveOptionsToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
-            this.saveOptionsToolStripMenuItem.Text = "Save Options";
+            this.saveOptionsToolStripMenuItem.Text = "保存选项";
             this.saveOptionsToolStripMenuItem.Click += new System.EventHandler(this.SaveOptionsToolStripMenuItem_Click);
             // 
             // closeToolStripMenuItem
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
             this.closeToolStripMenuItem.Size = new System.Drawing.Size(192, 22);
-            this.closeToolStripMenuItem.Text = "Exit";
+            this.closeToolStripMenuItem.Text = "退出";
             this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
             // 
             // editToolStripMenuItem
@@ -171,26 +171,26 @@ namespace KiwisCoOpMod
             this.saveOptionsOnExitToolStripMenuItem});
             this.editToolStripMenuItem.Name = "editToolStripMenuItem";
             this.editToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
-            this.editToolStripMenuItem.Text = "Options";
+            this.editToolStripMenuItem.Text = "选项";
             // 
             // gamemodeToolStripMenuItem
             // 
             this.gamemodeToolStripMenuItem.Name = "gamemodeToolStripMenuItem";
             this.gamemodeToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
-            this.gamemodeToolStripMenuItem.Text = "Gamemode";
+            this.gamemodeToolStripMenuItem.Text = "游戏模式";
             // 
             // pluginsToolStripMenuItem
             // 
             this.pluginsToolStripMenuItem.Name = "pluginsToolStripMenuItem";
             this.pluginsToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
-            this.pluginsToolStripMenuItem.Text = "Plugins";
+            this.pluginsToolStripMenuItem.Text = "插件";
             // 
             // clientPrintVConsoleToolStripMenuItem
             // 
             this.clientPrintVConsoleToolStripMenuItem.CheckOnClick = true;
             this.clientPrintVConsoleToolStripMenuItem.Name = "clientPrintVConsoleToolStripMenuItem";
             this.clientPrintVConsoleToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
-            this.clientPrintVConsoleToolStripMenuItem.Text = "Client: Print VConsole";
+            this.clientPrintVConsoleToolStripMenuItem.Text = "客户端：显示 VConsole";
             this.clientPrintVConsoleToolStripMenuItem.Click += new System.EventHandler(this.ClientPrintVConsoleToolStripMenuItem_CheckedChanged);
             // 
             // serverDisableUserVConsoleInputToolStripMenuItem
@@ -198,7 +198,7 @@ namespace KiwisCoOpMod
             this.serverDisableUserVConsoleInputToolStripMenuItem.CheckOnClick = true;
             this.serverDisableUserVConsoleInputToolStripMenuItem.Name = "serverDisableUserVConsoleInputToolStripMenuItem";
             this.serverDisableUserVConsoleInputToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
-            this.serverDisableUserVConsoleInputToolStripMenuItem.Text = "Server: Disable User VConsole Input";
+            this.serverDisableUserVConsoleInputToolStripMenuItem.Text = "服务器：禁用用户 VConsole 输入";
             this.serverDisableUserVConsoleInputToolStripMenuItem.Click += new System.EventHandler(this.ServerDisableUserVConsoleInputToolStripMenuItem_CheckedChanged);
             // 
             // saveOptionsOnExitToolStripMenuItem
@@ -208,7 +208,7 @@ namespace KiwisCoOpMod
             this.saveOptionsOnExitToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.saveOptionsOnExitToolStripMenuItem.Name = "saveOptionsOnExitToolStripMenuItem";
             this.saveOptionsOnExitToolStripMenuItem.Size = new System.Drawing.Size(260, 22);
-            this.saveOptionsOnExitToolStripMenuItem.Text = "Save Options on Exit";
+            this.saveOptionsOnExitToolStripMenuItem.Text = "退出时保存选项";
             this.saveOptionsOnExitToolStripMenuItem.CheckedChanged += new System.EventHandler(this.SaveOptionsOnExitToolStripMenuItem_CheckedChanged);
             // 
             // viewToolStripMenuItem
@@ -217,13 +217,13 @@ namespace KiwisCoOpMod
             this.alwaysOnTopToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.viewToolStripMenuItem.Text = "View";
+            this.viewToolStripMenuItem.Text = "查看";
             // 
             // alwaysOnTopToolStripMenuItem
             // 
             this.alwaysOnTopToolStripMenuItem.Name = "alwaysOnTopToolStripMenuItem";
             this.alwaysOnTopToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.alwaysOnTopToolStripMenuItem.Text = "Always On Top";
+            this.alwaysOnTopToolStripMenuItem.Text = "始终置顶";
             this.alwaysOnTopToolStripMenuItem.Click += new System.EventHandler(this.alwaysOnTopToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
@@ -232,13 +232,13 @@ namespace KiwisCoOpMod
             this.discordToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "Help";
+            this.helpToolStripMenuItem.Text = "帮助";
             // 
             // discordToolStripMenuItem
             // 
             this.discordToolStripMenuItem.Name = "discordToolStripMenuItem";
             this.discordToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
-            this.discordToolStripMenuItem.Text = "Discord";
+            this.discordToolStripMenuItem.Text = "Discord 社区";
             this.discordToolStripMenuItem.Click += new System.EventHandler(this.DiscordToolStripMenuItem_Click);
             // 
             // aboutToolStripMenuItem
@@ -249,7 +249,7 @@ namespace KiwisCoOpMod
             this.koFiToolStripMenuItem});
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
-            this.aboutToolStripMenuItem.Text = "About";
+            this.aboutToolStripMenuItem.Text = "关于";
             // 
             // gitHubToolStripMenuItem
             // 
@@ -262,14 +262,14 @@ namespace KiwisCoOpMod
             // 
             this.steamWorkshopToolStripMenuItem.Name = "steamWorkshopToolStripMenuItem";
             this.steamWorkshopToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.steamWorkshopToolStripMenuItem.Text = "Steam Workshop";
+            this.steamWorkshopToolStripMenuItem.Text = "Steam 创意工坊";
             this.steamWorkshopToolStripMenuItem.Click += new System.EventHandler(this.SteamWorkshopToolStripMenuItem_Click);
             // 
             // koFiToolStripMenuItem
             // 
             this.koFiToolStripMenuItem.Name = "koFiToolStripMenuItem";
             this.koFiToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.koFiToolStripMenuItem.Text = "Donate via Ko-fi";
+            this.koFiToolStripMenuItem.Text = "通过 Ko-fi 捐赠";
             this.koFiToolStripMenuItem.Click += new System.EventHandler(this.koFiToolStripMenuItem_Click);
             // 
             // checkBoxServerEnabled
@@ -309,38 +309,38 @@ namespace KiwisCoOpMod
             this.statusStrip.Size = new System.Drawing.Size(800, 22);
             this.statusStrip.SizingGrip = false;
             this.statusStrip.TabIndex = 0;
-            this.statusStrip.Text = "statusStrip1";
+            this.statusStrip.Text = "状态栏";
             // 
             // toolStripStatusLabelConnection
             // 
             this.toolStripStatusLabelConnection.ForeColor = System.Drawing.SystemColors.ControlText;
             this.toolStripStatusLabelConnection.Name = "toolStripStatusLabelConnection";
             this.toolStripStatusLabelConnection.Size = new System.Drawing.Size(39, 17);
-            this.toolStripStatusLabelConnection.Text = "Status";
+            this.toolStripStatusLabelConnection.Text = "状态";
             // 
             // toolStripStatusLabelVersion
             // 
             this.toolStripStatusLabelVersion.Name = "toolStripStatusLabelVersion";
             this.toolStripStatusLabelVersion.Size = new System.Drawing.Size(90, 17);
-            this.toolStripStatusLabelVersion.Text = "Version: v0.0.0.0";
+            this.toolStripStatusLabelVersion.Text = "版本：v0.0.0.0";
             // 
             // toolStripStatusLabelVconsolePort
             // 
             this.toolStripStatusLabelVconsolePort.Name = "toolStripStatusLabelVconsolePort";
             this.toolStripStatusLabelVconsolePort.Size = new System.Drawing.Size(118, 17);
-            this.toolStripStatusLabelVconsolePort.Text = "VConsole Port: 00000";
+            this.toolStripStatusLabelVconsolePort.Text = "VConsole 端口：00000";
             // 
             // toolStripStatusLabelVconsoleProtocol
             // 
             this.toolStripStatusLabelVconsoleProtocol.Name = "toolStripStatusLabelVconsoleProtocol";
             this.toolStripStatusLabelVconsoleProtocol.Size = new System.Drawing.Size(129, 17);
-            this.toolStripStatusLabelVconsoleProtocol.Text = "VConsole Protocol: 000";
+            this.toolStripStatusLabelVconsoleProtocol.Text = "VConsole 协议：000";
             // 
             // toolStripStatusLabelLibraries
             // 
             this.toolStripStatusLabelLibraries.Name = "toolStripStatusLabelLibraries";
             this.toolStripStatusLabelLibraries.Size = new System.Drawing.Size(105, 17);
-            this.toolStripStatusLabelLibraries.Text = "Libraries Loaded: 0";
+            this.toolStripStatusLabelLibraries.Text = "已加载库：0";
             // 
             // textBoxInput
             // 
@@ -356,7 +356,7 @@ namespace KiwisCoOpMod
             this.buttonStart.Name = "buttonStart";
             this.buttonStart.Size = new System.Drawing.Size(76, 23);
             this.buttonStart.TabIndex = 7;
-            this.buttonStart.Text = "Start";
+            this.buttonStart.Text = "启动";
             this.buttonStart.UseVisualStyleBackColor = true;
             this.buttonStart.Click += new System.EventHandler(this.ButtonStart_Click);
             // 
@@ -366,7 +366,7 @@ namespace KiwisCoOpMod
             this.buttonCommandType.Name = "buttonCommandType";
             this.buttonCommandType.Size = new System.Drawing.Size(76, 23);
             this.buttonCommandType.TabIndex = 8;
-            this.buttonCommandType.Text = "Chat";
+            this.buttonCommandType.Text = "聊天";
             this.buttonCommandType.UseVisualStyleBackColor = true;
             this.buttonCommandType.Click += new System.EventHandler(this.ButtonCommandType_Click);
             // 
@@ -387,7 +387,7 @@ namespace KiwisCoOpMod
             this.tabPageOutput.Padding = new System.Windows.Forms.Padding(3);
             this.tabPageOutput.Size = new System.Drawing.Size(764, 144);
             this.tabPageOutput.TabIndex = 0;
-            this.tabPageOutput.Text = "Global";
+            this.tabPageOutput.Text = "全局";
             // 
             // tabPageServer
             // 
@@ -411,7 +411,7 @@ namespace KiwisCoOpMod
             this.tabPageServer.Padding = new System.Windows.Forms.Padding(3);
             this.tabPageServer.Size = new System.Drawing.Size(768, 164);
             this.tabPageServer.TabIndex = 1;
-            this.tabPageServer.Text = "Server";
+            this.tabPageServer.Text = "服务器";
             // 
             // label2
             // 
@@ -420,7 +420,7 @@ namespace KiwisCoOpMod
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(307, 15);
             this.label2.TabIndex = 39;
-            this.label2.Text = "Type in a VConsole command to be input by every client.";
+            this.label2.Text = "输入要发送给所有客户端的 VConsole 命令。";
             // 
             // label1
             // 
@@ -429,7 +429,7 @@ namespace KiwisCoOpMod
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(398, 15);
             this.label1.TabIndex = 38;
-            this.label1.Text = "The current map, players will be forced to load this map when connecting.";
+            this.label1.Text = "当前地图；玩家连接时将被强制加载此地图。";
             // 
             // labelHelpServerPassword
             // 
@@ -457,7 +457,7 @@ namespace KiwisCoOpMod
             this.buttonServerVconsoleSend.Name = "buttonServerVconsoleSend";
             this.buttonServerVconsoleSend.Size = new System.Drawing.Size(64, 23);
             this.buttonServerVconsoleSend.TabIndex = 35;
-            this.buttonServerVconsoleSend.Text = "Send";
+            this.buttonServerVconsoleSend.Text = "发送";
             this.buttonServerVconsoleSend.UseVisualStyleBackColor = true;
             this.buttonServerVconsoleSend.Click += new System.EventHandler(this.buttonServerVconsoleSend_Click);
             // 
@@ -468,7 +468,7 @@ namespace KiwisCoOpMod
             this.labelServerVconsole.Name = "labelServerVconsole";
             this.labelServerVconsole.Size = new System.Drawing.Size(60, 15);
             this.labelServerVconsole.TabIndex = 34;
-            this.labelServerVconsole.Text = "VConsole:";
+            this.labelServerVconsole.Text = "VConsole：";
             // 
             // textBoxServerVconsole
             // 
@@ -484,7 +484,7 @@ namespace KiwisCoOpMod
             this.buttonServerChangeMap.Name = "buttonServerChangeMap";
             this.buttonServerChangeMap.Size = new System.Drawing.Size(64, 23);
             this.buttonServerChangeMap.TabIndex = 32;
-            this.buttonServerChangeMap.Text = "Update";
+            this.buttonServerChangeMap.Text = "更新";
             this.buttonServerChangeMap.UseVisualStyleBackColor = true;
             this.buttonServerChangeMap.Click += new System.EventHandler(this.ButtonServerChangeMap_Click);
             // 
@@ -525,7 +525,7 @@ namespace KiwisCoOpMod
             this.labelServerMap.Name = "labelServerMap";
             this.labelServerMap.Size = new System.Drawing.Size(34, 15);
             this.labelServerMap.TabIndex = 29;
-            this.labelServerMap.Text = "Map:";
+            this.labelServerMap.Text = "地图：";
             // 
             // labelServerPort
             // 
@@ -534,7 +534,7 @@ namespace KiwisCoOpMod
             this.labelServerPort.Name = "labelServerPort";
             this.labelServerPort.Size = new System.Drawing.Size(32, 15);
             this.labelServerPort.TabIndex = 18;
-            this.labelServerPort.Text = "Port:";
+            this.labelServerPort.Text = "端口：";
             // 
             // labelServerPassword
             // 
@@ -543,7 +543,7 @@ namespace KiwisCoOpMod
             this.labelServerPassword.Name = "labelServerPassword";
             this.labelServerPassword.Size = new System.Drawing.Size(60, 15);
             this.labelServerPassword.TabIndex = 21;
-            this.labelServerPassword.Text = "Password:";
+            this.labelServerPassword.Text = "密码：";
             // 
             // tabPageClient
             // 
@@ -564,7 +564,7 @@ namespace KiwisCoOpMod
             this.tabPageClient.Padding = new System.Windows.Forms.Padding(3);
             this.tabPageClient.Size = new System.Drawing.Size(768, 164);
             this.tabPageClient.TabIndex = 0;
-            this.tabPageClient.Text = "Client";
+            this.tabPageClient.Text = "客户端";
             // 
             // labelHelpUsername
             // 
@@ -573,7 +573,7 @@ namespace KiwisCoOpMod
             this.labelHelpUsername.Name = "labelHelpUsername";
             this.labelHelpUsername.Size = new System.Drawing.Size(355, 15);
             this.labelHelpUsername.TabIndex = 23;
-            this.labelHelpUsername.Text = "Type a username to identify yourself to both the server and others.\r\n";
+            this.labelHelpUsername.Text = "输入用于在服务器和其他玩家中识别你的用户名。\r\n";
             // 
             // labelHelpClientPassword
             // 
@@ -582,7 +582,7 @@ namespace KiwisCoOpMod
             this.labelHelpClientPassword.Name = "labelHelpClientPassword";
             this.labelHelpClientPassword.Size = new System.Drawing.Size(351, 15);
             this.labelHelpClientPassword.TabIndex = 22;
-            this.labelHelpClientPassword.Text = "If the remote server has a password set, type it in here if provided.\r\n";
+            this.labelHelpClientPassword.Text = "如果远程服务器设置了密码，请在此输入。\r\n";
             // 
             // labelHelpClientIpAddressPort
             // 
@@ -591,8 +591,8 @@ namespace KiwisCoOpMod
             this.labelHelpClientIpAddressPort.Name = "labelHelpClientIpAddressPort";
             this.labelHelpClientIpAddressPort.Size = new System.Drawing.Size(480, 15);
             this.labelHelpClientIpAddressPort.TabIndex = 21;
-            this.labelHelpClientIpAddressPort.Text = "Set this to the IP address of the remote server, or use \"localhost\" if you\'re run" +
-    "ning a server.";
+            this.labelHelpClientIpAddressPort.Text = "设置远程服务器的 IP 地址；如果服务器运行在本机，请使用 \"localhost\"。";
+
             // 
             // numericUpDownClientPort
             // 
@@ -614,7 +614,7 @@ namespace KiwisCoOpMod
             this.labelClientIpAddress.Name = "labelClientIpAddress";
             this.labelClientIpAddress.Size = new System.Drawing.Size(65, 15);
             this.labelClientIpAddress.TabIndex = 3;
-            this.labelClientIpAddress.Text = "IP Address:";
+            this.labelClientIpAddress.Text = "IP 地址：";
             // 
             // textBoxClientIpAddress
             // 
@@ -647,7 +647,7 @@ namespace KiwisCoOpMod
             this.labelClientPort.Name = "labelClientPort";
             this.labelClientPort.Size = new System.Drawing.Size(32, 15);
             this.labelClientPort.TabIndex = 5;
-            this.labelClientPort.Text = "Port:";
+            this.labelClientPort.Text = "端口：";
             // 
             // labelClientUsername
             // 
@@ -656,7 +656,7 @@ namespace KiwisCoOpMod
             this.labelClientUsername.Name = "labelClientUsername";
             this.labelClientUsername.Size = new System.Drawing.Size(63, 15);
             this.labelClientUsername.TabIndex = 7;
-            this.labelClientUsername.Text = "Username:";
+            this.labelClientUsername.Text = "用户名：";
             // 
             // labelClientPassword
             // 
@@ -665,7 +665,7 @@ namespace KiwisCoOpMod
             this.labelClientPassword.Name = "labelClientPassword";
             this.labelClientPassword.Size = new System.Drawing.Size(60, 15);
             this.labelClientPassword.TabIndex = 8;
-            this.labelClientPassword.Text = "Password:";
+            this.labelClientPassword.Text = "密码：";
             // 
             // tabControlTop
             // 
@@ -697,7 +697,7 @@ namespace KiwisCoOpMod
             this.Name = "UserInterface";
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Kiwi\'s Co-Op Mod for Half-Life: Alyx";
+            this.Text = "Kiwi 的《半条命：Alyx》联机模组";
             this.menuStrip.ResumeLayout(false);
             this.menuStrip.PerformLayout();
             this.statusStrip.ResumeLayout(false);

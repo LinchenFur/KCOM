@@ -60,7 +60,7 @@ lua_env.handlers[lua_env.persistence["gamemode_campaign"]] = function(handleType
                     -- Print pregame timer if different from last time
                     if lua_env.persistence["pregame_timer_display"] ~= lua_env.persistence["pregame_timer"] - (os.time() - lua_env.persistence["pregame_timer_start"]) then
                         lua_env.persistence["pregame_timer_display"] = lua_env.persistence["pregame_timer"] - (os.time() - lua_env.persistence["pregame_timer_start"])
-                        local hudDisplay = Response("command", "ent_fire kcom_hud setmessage \"\\nWaiting for players: " .. lua_env.persistence["pregame_timer_display"] .. "\"")
+                        local hudDisplay = Response("command", "ent_fire kcom_hud setmessage \"\\n等待玩家：" .. lua_env.persistence["pregame_timer_display"] .. "\"")
                         local timescale = Response("command", "host_timescale 0")
                         player.Session:Send(hudDisplay:ToString())
                         player.Session:Send(timescale:ToString())

@@ -56,7 +56,7 @@ lua_env.handlers[lua_env.persistence["gamemode_campaign"]] = function(handleType
                 if lua_env.persistence["pregame_using_hud"] and os.time() - lua_env.persistence["pregame_timer_start"] < lua_env.persistence["pregame_timer"] then
                     -- Add player to frozen players
                     lua_env.persistence["frozen_players"][player.Username] = true
-                    local hudDisplay = Response("command", "ent_fire kcom_hud setmessage \"\\nWaiting for players: " .. lua_env.persistence["pregame_timer_display"] .. "\"")
+                    local hudDisplay = Response("command", "ent_fire kcom_hud setmessage \"\\n等待玩家：" .. lua_env.persistence["pregame_timer_display"] .. "\"")
                     -- host_timescale from 0 to 1 using pregame timer
                     local timescale = Response("command", "host_timescale " .. (os.time() - lua_env.persistence["pregame_timer_start"]) / lua_env.persistence["pregame_timer"])
                     player.Session:Send(hudDisplay:ToString())

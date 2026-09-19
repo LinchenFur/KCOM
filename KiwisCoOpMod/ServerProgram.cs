@@ -36,7 +36,7 @@ namespace KiwisCoOpMod
         public List<IndexedClient> connections = new() { };
         public Type? gamemodeType;
         public List<Type> plugins = new();
-        public Channel channel = new("SV", "Server", Color.Olive);
+        public Channel channel = new("SV", "服务器", Color.Olive);
         public int tickrate = 66;
         public bool executeThink = false;
         public void Tick()
@@ -73,7 +73,7 @@ namespace KiwisCoOpMod
                     });
                     if (gamemodeType != null)
                     {
-                        Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, "Starting " + gamemodeType.Name + " gamemode on map " + Map.map + " with port " + Settings.Default.ServerPort));
+                        Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, "正在启动游戏模式：" + gamemodeType.Name + "；地图：" + Map.map + "；端口：" + Settings.Default.ServerPort));
                         PluginHandler.Handle(plugins, PluginHandleType.Server_PreGamemode_PostStart, gamemodeType, plugins, Map.map);
                         LuaEnvironment.instance.Handle(PluginHandleType.Server_PreGamemode_PostStart, gamemodeType, plugins, Map.map);
                         GamemodeHandler.Handle(gamemodeType, GamemodeHandleType.PostStart, gamemodeType, plugins);
@@ -111,7 +111,7 @@ namespace KiwisCoOpMod
                         LuaEnvironment.instance.Handle(PluginHandleType.Server_PostGamemode_PostClose, gamemodeType, plugins, Map.map);
                     }
                 }
-                Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, "Closing server on port " + Settings.Default.ServerPort));
+                Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, "正在关闭服务器，端口：" + Settings.Default.ServerPort));
                 wss.Dispose();
                 wss = null;
             }
@@ -141,7 +141,7 @@ namespace KiwisCoOpMod
                 {
                     Response outputDisconnect = new("status")
                     {
-                        data = client.Username + " connected"
+                        data = client.Username + " 已连接"
                     };
                     if (gamemodeType != null)
                     {
@@ -152,7 +152,7 @@ namespace KiwisCoOpMod
                         LuaEnvironment.instance.Handle(PluginHandleType.Server_PostGamemode_ClientOpen, connections, socket, client.Username);
                     }
                     connections.ForEach(c => c.Session.Send(JsonConvert.SerializeObject(outputDisconnect)));
-                    Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, client.Username + " connected"));
+                    Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, client.Username + " 已连接"));
                     break;
                 }
             }
@@ -165,7 +165,7 @@ namespace KiwisCoOpMod
                 {
                     Response outputDisconnect = new("status")
                     {
-                        data = client.Username + " disconnected"
+                        data = client.Username + " 已断开连接"
                     };
                     if (gamemodeType != null)
                     {
@@ -176,7 +176,7 @@ namespace KiwisCoOpMod
                         LuaEnvironment.instance.Handle(PluginHandleType.Server_PostGamemode_ClientClose, connections, socket, client.Username);
                     }
                     connections.ForEach(c => c.Session.Send(JsonConvert.SerializeObject(outputDisconnect)));
-                    Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, client.Username + " disconnected"));
+                    Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, client.Username + " 已断开连接"));
                     connections.Remove(client);
                     break;
                 }
@@ -214,7 +214,7 @@ namespace KiwisCoOpMod
                             {
                                 if (Settings.Default.ServerPassword != "" && response.password != Settings.Default.ServerPassword)
                                 {
-                                    Response output2 = new("status", "Invalid server password! Closing connection...");
+                                    Response output2 = new("status", "服务器密码无效！连接即将关闭……");
                                     socket.Send(JsonConvert.SerializeObject(output2));
                                 }
                                 else
@@ -223,7 +223,7 @@ namespace KiwisCoOpMod
                                     {
                                         if (indexed1.Username == response.clientUsername)
                                         {
-                                            Response output2 = new("status", "Client reconnected elsewhere, closing connection...");
+                                            Response output2 = new("status", "该客户端已在其他位置重新连接，连接即将关闭……");
                                             socket.Send(JsonConvert.SerializeObject(output2));
                                             socket.Close();
                                             connections.Remove(indexed1);
@@ -234,7 +234,7 @@ namespace KiwisCoOpMod
                                     {
                                         if (response.clientUsername.Length > 32 || Regex.Match(response.clientUsername, @"[\;""]").Success)
                                         {
-                                            Response outputRegex = new("status", "Invalid username, closing connection...");
+                                            Response outputRegex = new("status", "用户名无效，连接即将关闭……");
                                             socket.Send(JsonConvert.SerializeObject(outputRegex));
                                             socket.Close();
                                         }
@@ -255,7 +255,7 @@ namespace KiwisCoOpMod
                             }
                             else
                             {
-                                Response output2 = new("status", "Invalid username! Closing connection...");
+                                Response output2 = new("status", "用户名无效！连接即将关闭……");
                                 socket.Send(JsonConvert.SerializeObject(output2));
                                 socket.Close();
                             }
@@ -275,7 +275,7 @@ namespace KiwisCoOpMod
                                         Response output3 = new("status", response.data)
                                         {
                                             clientUsername = indexedClient.Username,
-                                            data = "Unknown command '" + command + "'"
+                                            data = "未知命令“" + command + "”"
                                         };
                                         switch (command)
                                         {
@@ -292,7 +292,7 @@ namespace KiwisCoOpMod
                                                 {
                                                     output3 = new Response("status", response.data)
                                                     {
-                                                        data = "VConsole input is disabled on this server."
+                                                        data = "此服务器已禁用 VConsole 输入。"
                                                     };
                                                 }
                                                 break;

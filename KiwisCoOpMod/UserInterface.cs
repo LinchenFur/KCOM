@@ -32,7 +32,7 @@ namespace KiwisCoOpMod
         public ClientProgram clientProgram;
         private bool started = false;
         private DateTime startTime;
-        private readonly Channel channel = new("KCOM", "Kiwi's Co-Op Mod", Color.Purple);
+        private readonly Channel channel = new("KCOM", "Kiwi 联机模组", Color.Purple);
         private readonly Random random = new();
         private Type gamemodeType = typeof(CoreGamemode);
         private readonly List<AddonInitializer> addons = new();
@@ -44,11 +44,11 @@ namespace KiwisCoOpMod
             Font = new Font(Font.Name, 8.25f * 96f / CreateGraphics().DpiX, Font.Style, Font.Unit, Font.GdiCharSet, Font.GdiVerticalFont);
             InitializeComponent();
             // Status bar
-            toolStripStatusLabelConnection.Text = "Inactive";
+            toolStripStatusLabelConnection.Text = "未启动";
             toolStripStatusLabelConnection.ForeColor = Color.Red;
-            toolStripStatusLabelVersion.Text = "Version: v" + ProductVersion.ToString();
-            toolStripStatusLabelVconsolePort.Text = "VConsole Port: " + Settings.Default.VconsolePort;
-            toolStripStatusLabelVconsoleProtocol.Text = "VConsole Protocol: " + Settings.Default.VconsoleProtocol;
+            toolStripStatusLabelVersion.Text = "版本：v" + ProductVersion.ToString();
+            toolStripStatusLabelVconsolePort.Text = "VConsole 端口：" + Settings.Default.VconsolePort;
+            toolStripStatusLabelVconsoleProtocol.Text = "VConsole 协议：" + Settings.Default.VconsoleProtocol;
             // Client settings
             checkBoxClientEnabled.Checked = Settings.Default.ClientEnabled;
             clientPrintVConsoleToolStripMenuItem.Checked = Settings.Default.ClientPrintVconsole;
@@ -90,7 +90,7 @@ namespace KiwisCoOpMod
                 {
                     Assembly.LoadFrom(Path.Combine(appDir, dll));
                 }
-                toolStripStatusLabelLibraries.Text = "Libraries Loaded: " + libraryFiles.Length;
+                toolStripStatusLabelLibraries.Text = "已加载库：" + libraryFiles.Length;
                 // Populate gamemode menu
                 bool first = true;
                 string gamemodesFolderPath = Path.Combine(appDir, "gamemodes");
@@ -238,10 +238,10 @@ namespace KiwisCoOpMod
                 PluginHandler.Handle(plugins, PluginHandleType.UserInterface_PreStart, this);
                 LuaEnvironment.instance.Handle(PluginHandleType.UserInterface_PreStart, this);
                 started = true;
-                buttonStart.Text = "Stop";
-                SetStatus(Color.Green, "Active");
+                buttonStart.Text = "停止";
+                SetStatus(Color.Green, "运行中");
                 startTime = DateTime.Now;
-                LogToOutput(channel, "Starting at " + startTime.ToString(@"hh\:mm\:ss"));
+                LogToOutput(channel, "启动时间：" + startTime.ToString(@"hh\:mm\:ss"));
                 if (checkBoxServerEnabled.Checked)
                     ServerProgram.instance.Start(gamemodeType, plugins);
                 if (checkBoxClientEnabled.Checked)
@@ -255,13 +255,13 @@ namespace KiwisCoOpMod
             {
                 PluginHandler.Handle(plugins, PluginHandleType.UserInterface_PreClose, this);
                 LuaEnvironment.instance.Handle(PluginHandleType.UserInterface_PreClose, this);
-                buttonStart.Text = "Start";
-                SetStatus(Color.Red, "Inactive");
+                buttonStart.Text = "启动";
+                SetStatus(Color.Red, "未启动");
                 ServerProgram.instance.Close();
                 clientProgram.Close();
                 started = false;
                 DateTime endTime = DateTime.Now;
-                LogToOutput(channel, "Stopped at", endTime.ToString(@"hh\:mm\:ss") + ", active for", (endTime - startTime).ToString(@"hh\:mm\:ss"));
+                LogToOutput(channel, "停止时间：", endTime.ToString(@"hh\:mm\:ss") + "，运行时长：", (endTime - startTime).ToString(@"hh\:mm\:ss"));
                 PluginHandler.Handle(plugins, PluginHandleType.UserInterface_PostClose, this);
                 LuaEnvironment.instance.Handle(PluginHandleType.UserInterface_PostClose, this);
                 //Save();
@@ -402,10 +402,10 @@ namespace KiwisCoOpMod
         {
             buttonCommandType.Text = buttonCommandType.Text switch
             {
-                "Chat" => "Command",
-                "Command" => "VConsole",
-                "VConsole" => "Server",
-                _ => "Chat",
+                "聊天" => "命令",
+                "命令" => "VConsole",
+                "VConsole" => "服务器",
+                _ => "聊天",
             };
         }
 
@@ -430,13 +430,13 @@ namespace KiwisCoOpMod
                 string prefix = "";
                 switch (buttonCommandType.Text)
                 {
-                    case "Command":
+                    case "命令":
                         prefix = "/";
                         break;
                     case "VConsole":
                         prefix = "/vc ";
                         break;
-                    case "Server":
+                    case "服务器":
                         ServerProgram.instance.Command(textBoxInput.Text.Split(" ").ToList());
                         LogToOutputGeneric("> " + textBoxInput.Text);
                         textBoxInput.Text = "";
@@ -495,7 +495,7 @@ namespace KiwisCoOpMod
         private void SaveOptionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Save();
-            LogToOutput(channel, "Options saved");
+            LogToOutput(channel, "选项已保存");
         }
 
         private void UPnPToolStripMenuItem_Click(object sender, EventArgs e)
@@ -510,13 +510,13 @@ namespace KiwisCoOpMod
             string suffix = "";
             if (firstTime)
             {
-                prefix = "Welcome to Kiwi's Co-Op Mod!\n\nThis software requires an open port in order to run a server. Using the UPnP protocol, this step can be done automatically.\n\n";
-                suffix = "You may access this dialog box at any time via 'File' > 'Forward Port via UPnP'.";
+                prefix = "欢迎使用 Kiwi 的联机模组！\n\n运行服务器需要开放端口。使用 UPnP 协议可以自动完成端口映射。\n\n";
+                suffix = "你可以随时通过“文件”>“通过 UPnP 转发端口”打开此对话框。";
             }
-            DialogResult res = MessageBox.Show(prefix+ "The Universal Plug and Play protocol, also known as UPnP, is a feature available on most routers designed to allow software to set port forwarding rules seamlessly.\n\n" +
-                "If you would like to host a server, click 'Yes' to open the TCP port '"+Settings.Default.ServerPort+"' via UPnP.\n\n" +
-                "If you are connecting to a remote server, click 'No' to proceed.\n\n" +
-                suffix, "Forward Port via UPnP", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            DialogResult res = MessageBox.Show(prefix+ "通用即插即用协议（UPnP）是大多数路由器支持的功能，可让软件自动设置端口转发规则。\n\n" +
+                "如果你要创建服务器，请点击“是”，通过 UPnP 开放 TCP 端口“"+Settings.Default.ServerPort+"”。\n\n" +
+                "如果你要连接远程服务器，请点击“否”继续。\n\n" +
+                suffix, "通过 UPnP 转发端口", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             switch(res)
             {
                 case DialogResult.Yes:
@@ -525,12 +525,12 @@ namespace KiwisCoOpMod
                         NatDiscoverer discoverer = new();
                         NatDevice device = await discoverer.DiscoverDeviceAsync();
                         await device.CreatePortMapAsync(new Mapping(Protocol.Tcp, Settings.Default.ServerPort, Settings.Default.ServerPort, "Kiwi's Co-Op Mod"));
-                        MessageBox.Show("Successfully forwarded port '" + Settings.Default.ServerPort + "'!", "Forward Port via UPnP", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show("端口“" + Settings.Default.ServerPort + "”已成功转发！", "通过 UPnP 转发端口", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                     catch (Exception ex)
                     {
-                        MessageBox.Show("An error has occured while attempting to forward port '" + Settings.Default.ServerPort + "':\n\n"+ex.Message+
-                            "\n\nYour router may not support UPnP. If the mapping does not already exist, please forward the port manually.", "Forward Port via UPnP", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("转发端口“" + Settings.Default.ServerPort + "”时发生错误：\n\n"+ex.Message+
+                            "\n\n你的路由器可能不支持 UPnP。如果端口映射尚不存在，请手动转发该端口。", "通过 UPnP 转发端口", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                     break;
             }
