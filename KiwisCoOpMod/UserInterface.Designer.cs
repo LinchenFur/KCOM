@@ -279,8 +279,7 @@ namespace KiwisCoOpMod
             this.checkBoxServerEnabled.Name = "checkBoxServerEnabled";
             this.checkBoxServerEnabled.Size = new System.Drawing.Size(513, 19);
             this.checkBoxServerEnabled.TabIndex = 15;
-            this.checkBoxServerEnabled.Text = "Enabled - Check if hosting a server. Make sure to provide players with your publi" +
-    "c IP address.";
+            this.checkBoxServerEnabled.Text = "已启用 - 如果要创建服务器，请勾选此项。请确保将你的公网 IP 地址提供给玩家。";
             this.checkBoxServerEnabled.UseVisualStyleBackColor = true;
             this.checkBoxServerEnabled.CheckedChanged += new System.EventHandler(this.CheckBoxServerEnabled_CheckedChanged);
             // 
@@ -291,8 +290,7 @@ namespace KiwisCoOpMod
             this.checkBoxClientEnabled.Name = "checkBoxClientEnabled";
             this.checkBoxClientEnabled.Size = new System.Drawing.Size(717, 19);
             this.checkBoxClientEnabled.TabIndex = 2;
-            this.checkBoxClientEnabled.Text = "Enabled - Check if connecting to a remote server. Make sure to enter a public IP " +
-    "address unless you are connecting to a local server.";
+            this.checkBoxClientEnabled.Text = "已启用 - 如果要连接远程服务器，请勾选此项。除连接本地服务器外，请输入公网 IP 地址。";
             this.checkBoxClientEnabled.UseVisualStyleBackColor = true;
             this.checkBoxClientEnabled.CheckedChanged += new System.EventHandler(this.CheckBoxClientEnabled_CheckedChanged);
             // 
@@ -438,8 +436,7 @@ namespace KiwisCoOpMod
             this.labelHelpServerPassword.Name = "labelHelpServerPassword";
             this.labelHelpServerPassword.Size = new System.Drawing.Size(442, 15);
             this.labelHelpServerPassword.TabIndex = 37;
-            this.labelHelpServerPassword.Text = "If desired, set this value. Every client should enter this password before connec" +
-    "ting.";
+            this.labelHelpServerPassword.Text = "如需设置密码，请在此输入。每位客户端都必须在连接前输入此密码。";
             // 
             // labelHelpServerPort
             // 
@@ -448,8 +445,7 @@ namespace KiwisCoOpMod
             this.labelHelpServerPort.Name = "labelHelpServerPort";
             this.labelHelpServerPort.Size = new System.Drawing.Size(484, 15);
             this.labelHelpServerPort.TabIndex = 36;
-            this.labelHelpServerPort.Text = "Set this to an available port number. Make sure to try UPnP port mapping in the F" +
-    "ile menu.";
+            this.labelHelpServerPort.Text = "设置一个可用的端口号。请在“文件”菜单中尝试使用 UPnP 端口转发。";
             // 
             // buttonServerVconsoleSend
             // 
