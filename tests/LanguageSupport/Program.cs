@@ -118,7 +118,9 @@ internal static partial class Program
         string intervalLua = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "kcom_interval.lua"));
         Check(intervalLua.Contains("RESC ") && intervalLua.Contains("kcom_setresources"), "Lua resource snapshot protocol");
         Check(intervalLua.Contains("player_retrieved_backpack_clip") && intervalLua.Contains("player_drop_resin_in_backpack"), "Lua resource event hooks");
+        Check(intervalLua.Contains("KCOM_PickupSync") && intervalLua.Contains("KCOM_ResourceSnapshot()"), "pickup resource snapshot");
         Check(intervalLua.Contains("KCOM_RegisterCompatibility") && intervalLua.Contains("KCOM_EmitCompatibility"), "Lua compatibility API");
+        Check(intervalLua.Contains("kcom_spawn") && intervalLua.Contains("KCOM_FindSyncEntity"), "Lua remote entity lookup");
         TestMapNames();
         TestPlayerIndexes();
         TestPacketValidation();
@@ -374,6 +376,12 @@ internal static partial class Program
                 Feed("TELE 1.25 -2.5 3.75 4.5 5.25 -6.75 KCOM");
                 Check(!peerProxy.Sent.Any(r => r.data?.StartsWith("kcom_teleportangles") == true), "loading peer isolated " + locale);
                 peerPlayer!.InitializationStage = InitializationStage.Ready;
+                peerProxy.Sent.Clear();
+                Feed("HEAD 1.25 -2.5 3.75 4.5 5.25 -6.75 KCOM");
+                Check(peerProxy.Sent.Any(r => r.data?.Contains("kcom_head_0") == true), "ready peer receives head sync " + locale);
+                peerProxy.Sent.Clear();
+                Feed("SPWN item_test sync_name 1 2 3 KCOM");
+                Check(peerProxy.Sent.Any(r => r.data == "kcom_spawn item_test sync_name 1 2 3"), "ready peer receives stable item spawn " + locale);
                 client.Map = "mp_kiwitest";
                 peerClient.Map = "other_map";
                 Feed("TELE 1.25 -2.5 3.75 4.5 5.25 -6.75 KCOM");

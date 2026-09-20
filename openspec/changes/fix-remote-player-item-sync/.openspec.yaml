@@ -1,0 +1,3 @@
+schema: spec-driven
+created: 2026-09-20
+goal: 修复多人玩家代理和动态物品在远端客户端不可见或无法继续移动的问题

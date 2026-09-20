@@ -385,10 +385,18 @@ function KiwisCoOpMod()
             local ent_held = util.EstimateNearestEntity(data.item_name, data.item, hand:GetOrigin())
             if IsValidEntity(ent_held) then
                 KCOM_EntitySyncSpecific(ent_held)
-                local name = ent_held:GetName()
+                local syncName
+                for key, object in pairs(KCOM_ENTCACHE) do
+                    if object.entity == ent_held then
+                        syncName = key
+                        break
+                    end
+                end
+                if not syncName then return end
                 local origin = ent_held:GetOrigin()
-                print("SPWN " .. data.item .. " " .. name .. " " .. origin[1] .. " " .. origin[2] .. " " .. origin[3] .. " KCOM")
+                print("SPWN " .. data.item .. " " .. syncName .. " " .. origin[1] .. " " .. origin[2] .. " " .. origin[3] .. " KCOM")
             end
+            KCOM_ResourceSnapshot()
         end
         ListenToGameEvent("item_pickup", KCOM_PickupSync, nil)
 
@@ -677,6 +685,32 @@ function KiwisCoOpMod()
             }));
         end
 
+        local function KCOM_FindSyncEntity(name)
+            local object = KCOM_ENTCACHE[name]
+            if object and IsValidEntity(object.entity) then
+                return object.entity, object.class
+            end
+            local entity = Entities:FindByName(nil, name)
+            if IsValidEntity(entity) then
+                return entity, entity:GetClassname()
+            end
+            return nil, nil
+        end
+
+        Convars:RegisterCommand("kcom_spawn", function(command, class, name, x, y, z)
+            if not class or not name or string.find(class, "[%c;\"]") or string.find(name, "[%c;\"]") then return end
+            local entity = KCOM_FindSyncEntity(name)
+            if not entity then
+                entity = SpawnEntityFromTableSynchronous(class, {
+                    targetname = name,
+                    origin = x .. " " .. y .. " " .. z,
+                })
+            end
+            if IsValidEntity(entity) then
+                entity:SetAbsOrigin(Vector(tonumber(x), tonumber(y), tonumber(z)))
+            end
+        end, "Kiwi's Co-Op Mod", 0);
+
         Convars:RegisterCommand("kcom_teleport", function(command, x, y, z)
             if Player then
                 local anchor = Player:GetHMDAnchor();
@@ -715,12 +749,10 @@ function KiwisCoOpMod()
                     end
                 end
             else
-                local object = KCOM_ENTCACHE[name];
-                if not object then return end
-                local entity = object.entity;
-                if not IsValidEntity(entity) then return end
-                if kcom_toggletypes[object.class] ~= nil then
-                    DoEntFireByInstanceHandle(entity, kcom_toggletypes[object.class][1], "", 0, nil, nil);
+                local entity, class = KCOM_FindSyncEntity(name)
+                if not entity then return end
+                if kcom_toggletypes[class] ~= nil then
+                    DoEntFireByInstanceHandle(entity, kcom_toggletypes[class][1], "", 0, nil, nil);
                 end
                 entity:SetAbsOrigin(Vector(tonumber(x), tonumber(y), tonumber(z)));
                 entity:SetAbsAngles(tonumber(pitch), tonumber(yaw), tonumber(roll));
@@ -729,6 +761,10 @@ function KiwisCoOpMod()
 
         Convars:RegisterCommand("kcom_setlocation_nonuuid", function(command, name, x, y, z, pitch, yaw, roll)
             local entities = Entities:FindAllByName(name);
+            if entities == nil or next(entities) == nil then
+                local entity = Entities:FindByName(nil, name)
+                entities = entity and { entity } or nil
+            end
             if entities ~= nil then
                 for _, entity in pairs(entities) do
                     local class = entity:GetClassname();
@@ -755,12 +791,10 @@ function KiwisCoOpMod()
                     end
                 end
             else
-                local object = KCOM_ENTCACHE[name];
-                if not object then return end
-                local entity = object.entity;
-                if not IsValidEntity(entity) then return end
+                local entity, class = KCOM_FindSyncEntity(name)
+                if not entity then return end
                 entity:FireOutput(type, Player, Player, {}, 0);
-                if object.class == "trigger_once" then
+                if class == "trigger_once" then
                     -- TODO: trigger_once, does it disable after firing?
                     DoEntFireByInstanceHandle(entity, "Disable", "", 0, nil, nil);
                 end
@@ -779,12 +813,10 @@ function KiwisCoOpMod()
                     end
                 end
             else
-                local object = KCOM_ENTCACHE[name];
-                if not object then return end
-                local entity = object.entity;
-                if not IsValidEntity(entity) then return end
-                if kcom_toggletypes[object.class] ~= nil then
-                    DoEntFireByInstanceHandle(entity, kcom_toggletypes[object.class][2], "", 0, nil, nil);
+                local entity, class = KCOM_FindSyncEntity(name)
+                if not entity then return end
+                if kcom_toggletypes[class] ~= nil then
+                    DoEntFireByInstanceHandle(entity, kcom_toggletypes[class][2], "", 0, nil, nil);
                 end
             end
         end, "Kiwi's Co-Op Mod", 0);
@@ -810,10 +842,8 @@ function KiwisCoOpMod()
                     --DoEntFireByInstanceHandle(entity, "BecomeTemporaryRagdoll", "", 0, nil, nil);
                 end
             else
-                local object = KCOM_ENTCACHE[name];
-                if not object then return end
-                local entity = object.entity;
-                if not IsValidEntity(entity) then return end
+                local entity = KCOM_FindSyncEntity(name)
+                if not entity then return end
                 local curhealth = entity:GetHealth();
                 if curhealth <= 0 then return end
                 entity:SetHealth(tonumber(health));
@@ -838,10 +868,8 @@ function KiwisCoOpMod()
                     end
                 end
             else
-                local object = KCOM_ENTCACHE[name];
-                if not object then return end
-                local entity = object.entity;
-                if not IsValidEntity(entity) then return end
+                local entity = KCOM_FindSyncEntity(name)
+                if not entity then return end
                 DoEntFireByInstanceHandle(entity, "Break", "", 0, nil, nil);
             end
         end, "Kiwi's Co-Op Mod", 0);
