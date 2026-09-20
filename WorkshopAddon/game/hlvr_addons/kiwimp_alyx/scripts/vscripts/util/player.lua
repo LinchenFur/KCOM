@@ -429,6 +429,7 @@ local registered_event_callbacks = {
     primary_hand_changed = {},
     player_drop_ammo_in_backpack = {},
     player_retrieved_backpack_clip = {},
+    player_drop_resin_in_backpack = {},
     player_stored_item_in_itemholder = {},
     player_removed_item_from_itemholder = {},
     weapon_switch = {},
@@ -935,6 +936,13 @@ local function listenEventPlayerDropResinInBackpack(data)
         Player.Items.resin_found = Player.Items.resin_found + resin_added
     end
     last_resin_dropped = nil
+    for callback, context in pairs(registered_event_callbacks[data.game_event_name]) do
+        if context ~= true then
+            callback(context, data)
+        else
+            callback(data)
+        end
+    end
 end
 ListenToGameEvent("player_drop_resin_in_backpack", listenEventPlayerDropResinInBackpack, nil)
 

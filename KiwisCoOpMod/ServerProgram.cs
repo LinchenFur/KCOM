@@ -69,6 +69,7 @@ namespace KiwisCoOpMod
                     LuaEnvironment.instance.Handle(PluginHandleType.Server_PostGamemode_PreStart, type, plugins, Map.map);
 
                     gamemodeType = type;
+                    KiwisCoOpModCore.ResourceInventorySettings.Shared = Settings.Default.ServerSharedResourceInventory;
                     wss = new WebSocketServer("ws://[::]:" + Settings.Default.ServerPort);
                     wss.Start(socket =>
                     {

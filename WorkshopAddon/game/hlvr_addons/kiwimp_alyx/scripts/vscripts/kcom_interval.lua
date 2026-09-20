@@ -7,8 +7,34 @@ KCOM_API_VERSION = 4; -- this value will change if breaking changes are pushed t
 KCOM_ACTIVE = false;
 KCOM_INITIALIZED = false;
 KCOM_ENTCACHE = {};
+KCOM_RESOURCE_SNAPSHOT = nil;
+KCOM_RESOURCE_SUPPRESS = nil;
 
 print("KCOM Enabled!");
+
+local function KCOM_ResourceSnapshot()
+    local ammo = Player.Items.ammo or {};
+    local values = {
+        math.max(0, math.floor(tonumber(ammo.energygun) or 0)),
+        math.max(0, math.floor(tonumber(ammo.rapidfire) or 0)),
+        math.max(0, math.floor(tonumber(ammo.shotgun) or 0)),
+        math.max(0, math.floor(tonumber(Player:GetResin()) or 0)),
+    };
+    local snapshot = table.concat(values, " ");
+    if KCOM_RESOURCE_SUPPRESS == snapshot then
+        KCOM_RESOURCE_SUPPRESS = nil;
+        KCOM_RESOURCE_SNAPSHOT = snapshot;
+        return;
+    end
+    if KCOM_RESOURCE_SNAPSHOT ~= snapshot then
+        KCOM_RESOURCE_SNAPSHOT = snapshot;
+        print("RESC " .. snapshot .. " KCOM");
+    end
+end
+
+RegisterPlayerEventCallback("player_drop_ammo_in_backpack", KCOM_ResourceSnapshot);
+RegisterPlayerEventCallback("player_retrieved_backpack_clip", KCOM_ResourceSnapshot);
+RegisterPlayerEventCallback("player_drop_resin_in_backpack", KCOM_ResourceSnapshot);
 
 function Precache(context)
     PrecacheModel("models/props/choreo_office/headset_prop.vmdl", context)
@@ -823,6 +849,21 @@ function KiwisCoOpMod()
             end
         end, "Kiwi's Co-Op Mod", 0);
 
+        Convars:RegisterCommand("kcom_setresources", function(command, energygun, rapidfire, shotgun, resin)
+            local values = {
+                math.max(0, math.floor(tonumber(energygun) or 0)),
+                math.max(0, math.floor(tonumber(rapidfire) or 0)),
+                math.max(0, math.floor(tonumber(shotgun) or 0)),
+                math.max(0, math.floor(tonumber(resin) or 0)),
+            };
+            Player.Items.ammo.energygun = values[1];
+            Player.Items.ammo.rapidfire = values[2];
+            Player.Items.ammo.shotgun = values[3];
+            Player.Items.resin = values[4];
+            KCOM_RESOURCE_SUPPRESS = table.concat(values, " ");
+            SendToServerConsole("hlvr_setresources " .. (values[1] * 10) .. " " .. (values[2] * 30) .. " " .. values[3] .. " " .. values[4]);
+        end, "Kiwi's Co-Op Mod", 0);
+
         Convars:RegisterCommand("kcom_cache_all_entities", function(command)
             KCOM_EntitySync(false)
         end, "Kiwi's Co-Op Mod", 0);
@@ -830,5 +871,6 @@ function KiwisCoOpMod()
         KCOM_EntitySync(true);
         KCOM_INITIALIZED = true;
         print("MAPN "..GetMapName().." "..KCOM_API_VERSION.." KCOM");
+        KCOM_ResourceSnapshot();
     end
 end

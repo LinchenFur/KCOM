@@ -1,0 +1,3 @@
+schema: spec-driven
+created: 2026-09-20
+goal: 让资源数量在联机时可控且避免重复计数

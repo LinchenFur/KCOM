@@ -62,6 +62,13 @@ namespace KiwisCoOpMod
             textBoxServerMap.Text = Settings.Default.ServerMap;
             numericUpDownServerPort.Value = Settings.Default.ServerPort;
             serverDisableUserVConsoleInputToolStripMenuItem.Checked = Settings.Default.ServerDisableUserVconsoleInput;
+            ToolStripMenuItem sharedResources = new("服务器：共享资源库存")
+            {
+                CheckOnClick = true,
+                Checked = Settings.Default.ServerSharedResourceInventory
+            };
+            sharedResources.Click += (_, _) => Settings.Default.ServerSharedResourceInventory = sharedResources.Checked;
+            editToolStripMenuItem.DropDownItems.Insert(4, sharedResources);
             // Options
             saveOptionsOnExitToolStripMenuItem.Checked = Settings.Default.SaveOptionsOnExit;
             currentAddons = JsonConvert.DeserializeObject<List<string>>(Settings.Default.CurrentAddons);

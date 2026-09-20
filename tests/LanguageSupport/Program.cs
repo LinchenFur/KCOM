@@ -115,8 +115,12 @@ internal static partial class Program
         }
         await TestTransport(longText);
         TestLuaBootstrap(multilingual);
+        string intervalLua = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "kcom_interval.lua"));
+        Check(intervalLua.Contains("RESC ") && intervalLua.Contains("kcom_setresources"), "Lua resource snapshot protocol");
+        Check(intervalLua.Contains("player_retrieved_backpack_clip") && intervalLua.Contains("player_drop_resin_in_backpack"), "Lua resource event hooks");
         TestMapNames();
         TestPlayerIndexes();
+        TestResourceInventory();
         await TestGamemode();
         await TestClientStartup();
         Console.WriteLine($"PASS: {checks} language support checks (mock game/loopback, not a live Alyx playtest).");
@@ -242,6 +246,41 @@ internal static partial class Program
         var reused = AlyxGlobalData.instance.AddPlayer(clients[3]);
         Check(reused?.Index == 1 && last?.Index == 2, "freed player index reused without renumbering");
         foreach (IndexedClient client in clients) AlyxGlobalData.instance.RemovePlayer(client.Session.ConnectionInfo.Id);
+    }
+
+    static void TestResourceInventory()
+    {
+        var sourceSocket = DispatchProxy.Create<IWebSocketConnection, SocketProxy>();
+        var peerSocket = DispatchProxy.Create<IWebSocketConnection, SocketProxy>();
+        var sourceProxy = (SocketProxy)(object)sourceSocket;
+        var peerProxy = (SocketProxy)(object)peerSocket;
+        var source = new IndexedClient(sourceSocket, "资源主机", "mp_kiwitest");
+        var peer = new IndexedClient(peerSocket, "资源观察者", "mp_kiwitest");
+        var clients = new List<IndexedClient> { source, peer };
+        Player? sourcePlayer = AlyxGlobalData.instance.AddPlayer(source);
+        Player? peerPlayer = AlyxGlobalData.instance.AddPlayer(peer);
+        sourcePlayer!.InitializationStage = InitializationStage.Ready;
+        peerPlayer!.InitializationStage = InitializationStage.Ready;
+        void Feed(string line) => _ = new AlyxGamemode.AlyxGamemode(GamemodeHandleType.PreResponse,
+            new Response("print", line), clients, sourceSocket, "mp_kiwitest");
+        AlyxGamemode.AlyxGamemode.ResetResourceInventory();
+        KiwisCoOpModCore.ResourceInventorySettings.Shared = true;
+        Feed("RESC 2 1 4 10 KCOM");
+        Check(peerProxy.Sent.Any(r => r.data == "kcom_setresources 2 1 4 10"), "shared resource snapshot broadcast");
+        peerProxy.Sent.Clear();
+        Feed("RESC 3 1 4 8 KCOM");
+        Check(peerProxy.Sent.Any(r => r.data == "kcom_setresources 3 1 4 8"), "shared resource delta applied");
+        peerProxy.Sent.Clear();
+        Feed("RESC -1 1 4 8 KCOM");
+        Check(peerProxy.Sent.Count == 0, "negative resource snapshot rejected");
+        AlyxGamemode.AlyxGamemode.ResetResourceInventory();
+        KiwisCoOpModCore.ResourceInventorySettings.Shared = false;
+        sourceProxy.Sent.Clear();
+        peerProxy.Sent.Clear();
+        Feed("RESC 4 1 4 8 KCOM");
+        Check(peerProxy.Sent.Count == 0, "independent resource inventory does not write back");
+        AlyxGlobalData.instance.RemovePlayer(sourceProxy.ID);
+        AlyxGlobalData.instance.RemovePlayer(peerProxy.ID);
     }
 
     static async Task TestGamemode()

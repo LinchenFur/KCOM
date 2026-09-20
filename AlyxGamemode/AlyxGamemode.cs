@@ -32,6 +32,53 @@ namespace AlyxGamemode
             Name = "Half-Life: Alyx";
             Description = "Play Half-Life: Alyx with up to 16 players!";
         }
+        private readonly record struct ResourceSnapshot(int Energygun, int Rapidfire, int Shotgun, int Resin)
+        {
+            public static ResourceSnapshot operator +(ResourceSnapshot left, ResourceSnapshot right) =>
+                new(left.Energygun + right.Energygun, left.Rapidfire + right.Rapidfire, left.Shotgun + right.Shotgun, left.Resin + right.Resin);
+            public static ResourceSnapshot operator -(ResourceSnapshot left, ResourceSnapshot right) =>
+                new(left.Energygun - right.Energygun, left.Rapidfire - right.Rapidfire, left.Shotgun - right.Shotgun, left.Resin - right.Resin);
+            public ResourceSnapshot ClampNonNegative() => new(Math.Max(0, Energygun), Math.Max(0, Rapidfire), Math.Max(0, Shotgun), Math.Max(0, Resin));
+        }
+
+        public static bool SharedResourceInventory
+        {
+            get => ResourceInventorySettings.Shared;
+            set => ResourceInventorySettings.Shared = value;
+        }
+        private static ResourceSnapshot? sharedResources;
+        private static readonly Dictionary<Guid, ResourceSnapshot> resourceSnapshots = new();
+        public static void ResetResourceInventory()
+        {
+            sharedResources = null;
+            resourceSnapshots.Clear();
+        }
+
+        private static bool TryParseResources(Packet packet, out ResourceSnapshot resources)
+        {
+            resources = default;
+            if (packet.args.Length != 5 || packet.args[4] != "KCOM") return false;
+            int[] values = new int[4];
+            for (int i = 0; i < values.Length; i++)
+                if (!int.TryParse(packet.args[i], NumberStyles.None, CultureInfo.InvariantCulture, out values[i]) || values[i] < 0) return false;
+            resources = new(values[0], values[1], values[2], values[3]);
+            return true;
+        }
+
+        private static string ResourceCommand(ResourceSnapshot resources) =>
+            "kcom_setresources " + resources.Energygun + " " + resources.Rapidfire + " " + resources.Shotgun + " " + resources.Resin;
+
+        private static void BroadcastResources(ResourceSnapshot resources, Player sender, List<IndexedClient> connections)
+        {
+            Response update = new("command", ResourceCommand(resources));
+            foreach (IndexedClient broadcast in connections)
+            {
+                Player? recipient = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
+                if (CanReceiveSync(recipient, sender, Guid.Empty))
+                    broadcast.Session.Send(update.ToString());
+            }
+        }
+
         private static bool CanReceiveSync(Player? recipient, Player sender, Guid senderId)
         {
             return sender.InitializationStage == InitializationStage.Ready &&
@@ -72,6 +119,7 @@ namespace AlyxGamemode
                                 {
                                     player.InitializationGeneration++;
                                     player.InitializationStage = InitializationStage.None;
+                                    resourceSnapshots.Remove(closeSocket.ConnectionInfo.Id);
                                     AlyxGlobalData.instance.RemovePlayer(closeSocket.ConnectionInfo.Id);
                                 }
                             }
@@ -94,6 +142,7 @@ namespace AlyxGamemode
                                             if (!connections.Any(c => c.Session.ConnectionInfo.Id == socket.ConnectionInfo.Id)) break;
                                             if (AlyxGlobalData.instance.GetPlayer(socket.ConnectionInfo.Id) == null)
                                             {
+                                                if (AlyxGlobalData.instance.GetPlayers().Count == 0) ResetResourceInventory();
                                                 foreach (IndexedClient client in connections)
                                                 {
                                                     if (client.Session.ConnectionInfo.Id == socket.ConnectionInfo.Id)
@@ -315,6 +364,19 @@ namespace AlyxGamemode
                                                                     }
                                                                 }
                                                             }
+                                                            break;
+                                                        case PacketType.ResourceSnapshot:
+                                                            if (!TryParseResources(packet, out ResourceSnapshot resources) || player.InitializationStage != InitializationStage.Ready)
+                                                                break;
+                                                            if (!SharedResourceInventory)
+                                                                break;
+                                                            Guid resourceId = socket.ConnectionInfo.Id;
+                                                            if (!sharedResources.HasValue)
+                                                                sharedResources = resources;
+                                                            else if (resourceSnapshots.TryGetValue(resourceId, out ResourceSnapshot previous))
+                                                                sharedResources = (sharedResources.Value + (resources - previous)).ClampNonNegative();
+                                                            resourceSnapshots[resourceId] = resources;
+                                                            BroadcastResources(sharedResources.Value, player, connections);
                                                             break;
                                                         case PacketType.MapName:
                                                             if (packet.args.Length != 3 || packet.args[2] != "KCOM" ||
