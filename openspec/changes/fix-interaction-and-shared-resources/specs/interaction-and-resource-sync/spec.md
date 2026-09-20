@@ -4,7 +4,7 @@
 
 ### Requirement: Interactive entity outputs are synchronized
 
-KCOM MUST track common doors, moving doors, buttons, triggers, and gameplay items, and MUST forward supported interaction outputs as `FIRE` events to Ready clients on the same map.
+KCOM MUST track common doors, moving doors, buttons, triggers, gameplay items, NPCs, and known short-lived projectile entities, and MUST forward supported interaction outputs as `FIRE` events to Ready clients on the same map.
 
 #### Scenario: A player activates an interactive entity
 
@@ -39,3 +39,19 @@ When the shared-resource setting changes while the server is running, KCOM MUST 
 - **WHEN** the operator enables shared resource inventory
 - **THEN** the server sends `kcom_sync_resources`
 - **AND** each client immediately emits a fresh `RESC` snapshot
+
+### Requirement: NPC health and projectile movement are synchronized
+
+KCOM MUST synchronize tracked NPC movement and health changes, and MUST discover known short-lived projectile entities during the periodic sync pass so their spawn, movement, and removal can be forwarded to other Ready clients.
+
+#### Scenario: An NPC is damaged
+
+- **WHEN** a tracked NPC loses health or dies
+- **THEN** the addon emits `NPHP`
+- **AND** other clients apply the same health change and death state
+
+#### Scenario: A monster projectile is created
+
+- **WHEN** a known projectile entity appears and moves on one client
+- **THEN** the addon emits `SPWN` and `PHYS` for its stable identifier
+- **AND** other clients create, move, and remove the corresponding entity when it expires

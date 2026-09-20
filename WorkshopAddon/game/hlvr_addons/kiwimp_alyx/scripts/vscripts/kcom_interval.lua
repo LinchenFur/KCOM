@@ -128,7 +128,18 @@ function KiwisCoOpMod()
             return classname.."+"..name.."+"..math.floor(x).."+"..math.floor(y).."+"..math.floor(z);
         end
 
+        local function KCOM_ScanDynamicProjectiles()
+            for className, _ in pairs(kcom_projectile_trackers) do
+                for _, entity in pairs(Entities:FindAllByClassname(className) or {}) do
+                    if IsValidEntity(entity) then
+                        KCOM_EntitySyncSpecific(entity)
+                    end
+                end
+            end
+        end
+
         function KCOM_CacheSync()
+            KCOM_ScanDynamicProjectiles()
             for i, object in pairs(KCOM_ENTCACHE) do
                 local entity = object.entity;
                 if IsValidEntity(entity) then
@@ -326,6 +337,19 @@ function KiwisCoOpMod()
 
             -- npcs
             ["npc_furniture"] = true,
+            ["npc_antlionguard"] = true,
+            ["npc_fastzombie"] = true,
+            ["npc_combine"] = true,
+            ["npc_combinegunship"] = true,
+            ["npc_cscanner"] = true,
+            ["npc_clawscanner"] = true,
+            ["npc_turret_floor"] = true,
+            ["npc_turret_ceiling"] = true,
+            ["npc_turret_ceiling_pulse"] = true,
+            ["npc_rollergrenade"] = true,
+            ["npc_rollermine"] = true,
+            ["npc_hunter"] = true,
+            ["npc_hunter_invincible"] = true,
             ["npc_headcrab_armored"] = true,
             ["npc_headcrab_runner"] = true,
             ["npc_headcrab_black"] = true,
@@ -339,6 +363,25 @@ function KiwisCoOpMod()
             ["npc_manhack"] = true,
             ["npc_barnacle"] = true,
         };
+
+        -- Projectile entities are short-lived, so they are scanned every sync tick.
+        kcom_projectile_trackers = {
+            ["_plasma"] = true,
+            ["apc_missile"] = true,
+            ["bounce_bomb"] = true,
+            ["combine_bouncemine"] = true,
+            ["combine_mine"] = true,
+            ["crossbow_bolt"] = true,
+            ["grenade_spit"] = true,
+            ["hunter_flechette"] = true,
+            ["mortarshell"] = true,
+            ["rpg_missile"] = true,
+            ["runner_electric_spit"] = true,
+            ["sniperbullet"] = true,
+            ["waterbullet"] = true,
+            ["xen_foliage_turret_projectile"] = true,
+        };
+
         kcom_toggletypes = {
             ["trigger_multiple"] = {"Disable", "Enable"},
             ["trigger_once"] = {"Disable", "Enable"},

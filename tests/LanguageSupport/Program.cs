@@ -126,6 +126,7 @@ internal static partial class Program
         Check(intervalLua.Contains("kcom_spawn") && intervalLua.Contains("KCOM_FindSyncEntity"), "Lua remote entity lookup");
         Check(intervalLua.Contains("KCOM_GetSyncName") && intervalLua.Contains("ALIV KCOM"), "stable output IDs and heartbeat");
         Check(intervalLua.Contains("kcom_sync_resources") && intervalLua.Contains("OnFullyOpen") && intervalLua.Contains("OnFullyClosed"), "resource refresh and door output hooks");
+        Check(intervalLua.Contains("KCOM_ScanDynamicProjectiles") && intervalLua.Contains("runner_electric_spit") && intervalLua.Contains("npc_antlionguard"), "NPC and projectile trackers");
         Check(intervalLua.Contains("kcom_remove_player"), "remote disconnect cleanup");
         TestMapNames();
         TestPlayerIndexes();
