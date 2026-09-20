@@ -40,6 +40,14 @@ RegisterPlayerEventCallback("player_drop_ammo_in_backpack", KCOM_ResourceSnapsho
 RegisterPlayerEventCallback("player_retrieved_backpack_clip", KCOM_ResourceSnapshot);
 RegisterPlayerEventCallback("player_drop_resin_in_backpack", KCOM_ResourceSnapshot);
 
+local function KCOM_PlayerHurt(data)
+    local damage = tonumber(data and (data.damageamount or data.damage)) or 0;
+    local health = math.max(0, math.floor(tonumber(Player:GetHealth()) or 0));
+    local origin = Player:GetOrigin();
+    print("HURT " .. damage .. " " .. health .. " " .. origin[1] .. " " .. origin[2] .. " " .. origin[3] .. " KCOM");
+end
+ListenToGameEvent("player_hurt", KCOM_PlayerHurt, nil);
+
 local function KCOM_IsCompatName(value)
     return type(value) == "string" and #value > 0 and #value <= 64 and string.match(value, "^[%w_-]+$") ~= nil;
 end
@@ -948,6 +956,13 @@ function KiwisCoOpMod()
                 local entity = KCOM_FindSyncEntity(name)
                 if not entity then return end
                 DoEntFireByInstanceHandle(entity, "Break", "", 0, nil, nil);
+            end
+        end, "Kiwi's Co-Op Mod", 0);
+
+        Convars:RegisterCommand("kcom_player_hurt", function(command, index, damage, x, y, z)
+            local head = Entities:FindByName(nil, "kcom_head_" .. index);
+            if IsValidEntity(head) then
+                StartSoundEvent("DamageNPC.Bullet", head);
             end
         end, "Kiwi's Co-Op Mod", 0);
 

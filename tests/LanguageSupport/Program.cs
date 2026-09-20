@@ -127,6 +127,7 @@ internal static partial class Program
         Check(intervalLua.Contains("KCOM_GetSyncName") && intervalLua.Contains("ALIV KCOM"), "stable output IDs and heartbeat");
         Check(intervalLua.Contains("kcom_sync_resources") && intervalLua.Contains("OnFullyOpen") && intervalLua.Contains("OnFullyClosed"), "resource refresh and door output hooks");
         Check(intervalLua.Contains("KCOM_ScanDynamicProjectiles") && intervalLua.Contains("runner_electric_spit") && intervalLua.Contains("npc_antlionguard"), "NPC and projectile trackers");
+        Check(intervalLua.Contains("player_hurt") && intervalLua.Contains("kcom_player_hurt") && intervalLua.Contains("HURT "), "player damage feedback sync");
         Check(intervalLua.Contains("kcom_remove_player"), "remote disconnect cleanup");
         TestMapNames();
         TestPlayerIndexes();
@@ -281,6 +282,7 @@ internal static partial class Program
             new Packet("SPWN", "item_test entity 1 2 3"),
             new Packet("MAPN", "mp_kiwitest nope KCOM"),
             new Packet("FIRE", "entity OnTrigger;quit KCOM"),
+            new Packet("HURT", "4 86 1 NaN 3 KCOM"),
         }) Check(!packet.IsValid(), "invalid packet rejected: " + packet.type);
         Check(new Packet("HEAD", "  1   2 3 4 5 6   KCOM ").IsValid(), "packet whitespace normalized");
     }

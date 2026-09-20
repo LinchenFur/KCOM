@@ -530,6 +530,15 @@ namespace AlyxGamemode
                                                                 }
                                                             }
                                                             break;
+                                                        case PacketType.PlayerDamage:
+                                                            Response hit = new("command", "kcom_player_hurt " + player.Index + " " + packet.args[0] + " " + packet.args[2] + " " + packet.args[3] + " " + packet.args[4]);
+                                                            foreach (IndexedClient broadcast in connections)
+                                                            {
+                                                                Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
+                                                                    broadcast.Session.Send(JsonConvert.SerializeObject(hit));
+                                                            }
+                                                            break;
                                                         case PacketType.NPCHealth:
                                                             Response p = new("command", "kcom_npc_sethealth " + packet.args[0] + " " + packet.args[1]);
                                                             foreach (IndexedClient broadcast in connections)

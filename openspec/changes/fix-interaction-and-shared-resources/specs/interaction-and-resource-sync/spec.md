@@ -55,3 +55,14 @@ KCOM MUST synchronize tracked NPC movement and health changes, and MUST discover
 - **WHEN** a known projectile entity appears and moves on one client
 - **THEN** the addon emits `SPWN` and `PHYS` for its stable identifier
 - **AND** other clients create, move, and remove the corresponding entity when it expires
+
+### Requirement: Hitscan damage feedback is synchronized
+
+KCOM MUST forward local player damage events as sanitized `HURT` packets so other clients can render feedback on the corresponding remote player proxy.
+
+#### Scenario: A player is hit by an instant attack
+
+- **WHEN** the local game emits `player_hurt`
+- **THEN** the addon emits the player's damage, current health, and origin in a `HURT` packet
+- **AND** the server forwards a `kcom_player_hurt` command to other Ready clients on the same map
+- **AND** the receiving client plays damage feedback at the matching remote player proxy
