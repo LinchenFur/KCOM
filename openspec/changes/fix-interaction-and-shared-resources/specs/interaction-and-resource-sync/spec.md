@@ -66,3 +66,13 @@ KCOM MUST forward local player damage events as sanitized `HURT` packets so othe
 - **THEN** the addon emits the player's damage, current health, and origin in a `HURT` packet
 - **AND** the server forwards a `kcom_player_hurt` command to other Ready clients on the same map
 - **AND** the receiving client plays damage feedback at the matching remote player proxy
+
+### Requirement: Physics props use stable spawn and movement synchronization
+
+KCOM MUST discover common physics props such as bottles, cans, loose containers, and interactive props after map initialization, emit one stable `SPWN` (including the model when available), and continue forwarding their `PHYS` movement until removal.
+
+#### Scenario: A player throws a bottle or can
+
+- **WHEN** a physics prop is picked up or newly discovered and then moves
+- **THEN** the addon emits one stable `SPWN` followed by `PHYS` updates
+- **AND** the receiving client reuses the same entity for subsequent movement and removal events

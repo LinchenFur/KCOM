@@ -105,7 +105,7 @@ namespace AlyxGamemode
                 PacketType.MapName => args.Length == 3 && IsSafeToken(args[0]) && IsNonNegativeInteger(args[1]),
                 PacketType.ResourceSnapshot => args.Length == 5 && AreNonNegativeIntegers(0, 4),
                 PacketType.Teleport => args.Length == 7 && AreFiniteNumbers(0, 6),
-                PacketType.Spawn => args.Length == 6 && IsSafeToken(args[0]) && IsSafeToken(args[1]) && AreFiniteNumbers(2, 3),
+                PacketType.Spawn => (args.Length == 6 || args.Length == 7) && IsSafeToken(args[0]) && IsSafeToken(args[1]) && AreFiniteNumbers(2, 3) && (args.Length == 6 || IsSafeToken(args[5])),
                 PacketType.BrokenProp or PacketType.EntityRemoved or PacketType.TemplateEntity => args.Length == 2 && IsSafeToken(args[0]),
                 PacketType.EntityFired => args.Length == 3 && IsSafeToken(args[0]) && IsSafeToken(args[1]),
                 PacketType.PlayerDamage => args.Length == 6 && AreFiniteNumbers(0, 5),

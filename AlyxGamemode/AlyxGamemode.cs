@@ -285,7 +285,8 @@ namespace AlyxGamemode
                                                     switch (packet.type)
                                                     {
                                                         case PacketType.Spawn:
-                                                            Response spawn = new("command", "kcom_spawn " + packet.args[0] + " " + packet.args[1] + " " + packet.args[2] + " " + packet.args[3] + " " + packet.args[4]);
+                                                            string model = packet.args.Length == 7 ? " " + packet.args[5] : "";
+                                                            Response spawn = new("command", "kcom_spawn " + packet.args[0] + " " + packet.args[1] + " " + packet.args[2] + " " + packet.args[3] + " " + packet.args[4] + model);
                                                             foreach (IndexedClient broadcastClient2 in connections)
                                                             {
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcastClient2.Session.ConnectionInfo.Id);

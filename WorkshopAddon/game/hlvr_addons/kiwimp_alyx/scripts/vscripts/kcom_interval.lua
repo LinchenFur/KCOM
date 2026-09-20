@@ -136,28 +136,27 @@ function KiwisCoOpMod()
             return classname.."+"..name.."+"..math.floor(x).."+"..math.floor(y).."+"..math.floor(z);
         end
 
-        local function KCOM_ScanDynamicProjectiles()
-            for className, _ in pairs(kcom_projectile_trackers) do
+        local function KCOM_ScanDynamicEntities()
+            for className, _ in pairs(kcom_dynamic_trackers) do
                 for _, entity in pairs(Entities:FindAllByClassname(className) or {}) do
                     if IsValidEntity(entity) then
-                        KCOM_EntitySyncSpecific(entity)
+                        KCOM_EntitySyncSpecific(entity, true)
                     end
                 end
             end
         end
 
         function KCOM_CacheSync()
-            KCOM_ScanDynamicProjectiles()
+            KCOM_ScanDynamicEntities()
             for i, object in pairs(KCOM_ENTCACHE) do
                 local entity = object.entity;
                 if IsValidEntity(entity) then
                     if not string.find(object.class, "trigger_") then
                         local origin = entity:GetAbsOrigin();
                         local angles = entity:GetAnglesAsVector();
-                        if object.class == "prop_door_rotating_physics" and (math.floor(angles[1]) ~= math.floor(object.angles[1])) or (math.floor(angles[2]) ~= math.floor(object.angles[2])) or (math.floor(angles[3]) ~= math.floor(object.angles[3])) then
-                            print("PHYS "..object.name.." "..origin[1].." "..origin[2].." "..origin[3].." "..angles[1].." "..angles[2].." "..angles[3].." KCOM");
-                            object.angles = angles;
-                        elseif (math.floor(origin[1]) ~= math.floor(object.origin[1])) or (math.floor(origin[2]) ~= math.floor(object.origin[2])) or (math.floor(origin[3]) ~= math.floor(object.origin[3])) then
+                        local angleChanged = math.abs(angles[1] - object.angles[1]) > 2 or math.abs(angles[2] - object.angles[2]) > 2 or math.abs(angles[3] - object.angles[3]) > 2;
+                        local originChanged = math.abs(origin[1] - object.origin[1]) > 0.5 or math.abs(origin[2] - object.origin[2]) > 0.5 or math.abs(origin[3] - object.origin[3]) > 0.5;
+                        if angleChanged or originChanged then
                             print("PHYS "..object.name.." "..origin[1].." "..origin[2].." "..origin[3].." "..angles[1].." "..angles[2].." "..angles[3].." KCOM");
                             object.origin = origin;
                             object.angles = angles;
@@ -200,17 +199,11 @@ function KiwisCoOpMod()
             print("TELE "..origin[1].." "..origin[2].." "..origin[3].." "..angles[1].." "..angles[2].." "..angles[3].." KCOM");
         end
 
-        function KCOM_EntitySyncSpecific(entity)
-            local precached = {}
-
-            for _, object in pairs(KCOM_ENTCACHE) do
-                if IsValidEntity(object.entity) then
-                    precached[object.entity:GetEntityIndex()] = true;
+        function KCOM_EntitySyncSpecific(entity, announce)
+            for _, cached in pairs(KCOM_ENTCACHE) do
+                if cached.entity == entity then
+                    return false, cached.name, cached.class
                 end
-            end
-
-            if precached[entity:GetEntityIndex()] then
-                return -- already precached
             end
 
             local object = {};
@@ -247,6 +240,10 @@ function KiwisCoOpMod()
             else
                 KCOM_ENTCACHE[#KCOM_ENTCACHE+1] = object;
             end
+            if announce then
+                print("SPWN "..object.class.." "..object.name.." "..object.origin[1].." "..object.origin[2].." "..object.origin[3].." "..(object.model or "").." KCOM");
+            end
+            return true, object.name, object.class
         end
 
         function KCOM_Templated(tempent, ents)
@@ -390,6 +387,19 @@ function KiwisCoOpMod()
             ["xen_foliage_turret_projectile"] = true,
         };
 
+        kcom_dynamic_trackers = {};
+        for className, _ in pairs(kcom_projectile_trackers) do kcom_dynamic_trackers[className] = true end
+        for _, className in ipairs({
+            "prop_physics", "prop_physics_interactive", "prop_physics_override",
+            "prop_animinteractable", "prop_ragdoll", "prop_animating_breakable",
+            "item_item_crate", "item_hlvr_clip_energygun", "item_hlvr_clip_energygun_multiple",
+            "item_hlvr_clip_rapidfire", "item_hlvr_clip_shotgun_single", "item_hlvr_clip_shotgun_multiple",
+            "item_hlvr_prop_battery", "item_hlvr_crafting_currency_large", "item_hlvr_crafting_currency_small",
+            "item_hlvr_grenade_frag", "item_hlvr_grenade_remote_sticky", "item_hlvr_headcrab_gland"
+        }) do
+            kcom_dynamic_trackers[className] = true
+        end
+
         kcom_toggletypes = {
             ["trigger_multiple"] = {"Disable", "Enable"},
             ["trigger_once"] = {"Disable", "Enable"},
@@ -456,11 +466,7 @@ function KiwisCoOpMod()
             local hand = Player.Hands[handId + 1]
             local ent_held = util.EstimateNearestEntity(data.item_name, data.item, hand:GetOrigin())
             if IsValidEntity(ent_held) then
-                KCOM_EntitySyncSpecific(ent_held)
-                local syncName = KCOM_GetSyncName(ent_held)
-                if not syncName or syncName == "" then return end
-                local origin = ent_held:GetOrigin()
-                print("SPWN " .. data.item .. " " .. syncName .. " " .. origin[1] .. " " .. origin[2] .. " " .. origin[3] .. " KCOM")
+                KCOM_EntitySyncSpecific(ent_held, true)
             end
             KCOM_ResourceSnapshot()
         end
@@ -769,13 +775,14 @@ function KiwisCoOpMod()
             return nil, nil
         end
 
-        Convars:RegisterCommand("kcom_spawn", function(command, class, name, x, y, z)
-            if not class or not name or string.find(class, "[%c;\"]") or string.find(name, "[%c;\"]") then return end
+        Convars:RegisterCommand("kcom_spawn", function(command, class, name, x, y, z, model)
+            if not class or not name or string.find(class, "[%c;\"]") or string.find(name, "[%c;\"]") or (model and string.find(model, "[%c;\"]")) then return end
             local entity = KCOM_FindSyncEntity(name)
             if not entity then
                 entity = SpawnEntityFromTableSynchronous(class, {
                     targetname = name,
                     origin = x .. " " .. y .. " " .. z,
+                    model = model,
                 })
             end
             if IsValidEntity(entity) then
