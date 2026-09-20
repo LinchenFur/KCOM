@@ -132,7 +132,7 @@ function KiwisCoOpMod()
             for i, object in pairs(KCOM_ENTCACHE) do
                 local entity = object.entity;
                 if IsValidEntity(entity) then
-                    if not string.find(object.class, "trigger_") and not string.find(object.class, "func_") then
+                    if not string.find(object.class, "trigger_") then
                         local origin = entity:GetAbsOrigin();
                         local angles = entity:GetAnglesAsVector();
                         if object.class == "prop_door_rotating_physics" and (math.floor(angles[1]) ~= math.floor(object.angles[1])) or (math.floor(angles[2]) ~= math.floor(object.angles[2])) or (math.floor(angles[3]) ~= math.floor(object.angles[3])) then
@@ -297,6 +297,10 @@ function KiwisCoOpMod()
             ["prop_dry_erase_marker"] = true,
             ["prop_animinteractable"] = true,
             ["prop_door_rotating_physics"] = true,
+            ["prop_door_rotating"] = true,
+            ["func_door"] = true,
+            ["func_door_rotating"] = true,
+            ["func_movelinear"] = true,
             ["prop_handpose"] = false, -- experimental
             ["prop_ragdoll"] = true,
             ["prop_animating_breakable"] = true,
@@ -362,6 +366,10 @@ function KiwisCoOpMod()
             ["prop_dry_erase_marker"] = {"DisableMotion", "EnableMotion"},
             ["prop_animinteractable"] = {"DisableInteraction", "EnableInteraction"},
             ["prop_door_rotating_physics"] = {"DisableMotion", "EnableMotion"},
+            ["prop_door_rotating"] = {"DisableMotion", "EnableMotion"},
+            ["func_door"] = {"Disable", "Enable"},
+            ["func_door_rotating"] = {"Disable", "Enable"},
+            ["func_movelinear"] = {"Disable", "Enable"},
             ["prop_animating_breakable"] = {"DisableMotion", "EnableMotion"},
             ["prop_ragdoll"] = {"DisableMotion", "EnableMotion"},
             --["prop_handpose"] = {"Disable", "Enable"},
@@ -423,6 +431,12 @@ function KiwisCoOpMod()
             end
         end
 
+        KCOM_OnOpen = function(params) fireit(params, "OnOpen") end
+        KCOM_OnClose = function(params) fireit(params, "OnClose") end
+        KCOM_OnFullyOpen = function(params) fireit(params, "OnFullyOpen") end
+        KCOM_OnFullyClosed = function(params) fireit(params, "OnFullyClosed") end
+        KCOM_OnBlockedOpening = function(params) fireit(params, "OnBlockedOpening") end
+        KCOM_OnBlockedClosing = function(params) fireit(params, "OnBlockedClosing") end
         KCOM_OnTrigger = function(params) fireit(params, "OnTrigger") end
         KCOM_OnStartTouch = function(params) fireit(params, "OnStartTouch") end
         KCOM_OnEndTouch = function(params) fireit(params, "OnEndTouch") end
@@ -462,12 +476,12 @@ function KiwisCoOpMod()
         KCOM_OnCompletionD_Forward = function(params) fireit(params, "OnCompletionD_Forward") end
         KCOM_OnCompletionE_Forward = function(params) fireit(params, "OnCompletionE_Forward") end
         KCOM_OnCompletionF_Forward = function(params) fireit(params, "OnCompletionF_Forward") end
-        KCOM_OnCompletionA_Backward = function(params) fireit(params, "OnCompletionA_Forward") end
-        KCOM_OnCompletionB_Backward = function(params) fireit(params, "OnCompletionB_Forward") end
-        KCOM_OnCompletionC_Backward = function(params) fireit(params, "OnCompletionC_Forward") end
-        KCOM_OnCompletionD_Backward = function(params) fireit(params, "OnCompletionD_Forward") end
-        KCOM_OnCompletionE_Backward = function(params) fireit(params, "OnCompletionE_Forward") end
-        KCOM_OnCompletionF_Backward = function(params) fireit(params, "OnCompletionF_Forward") end
+        KCOM_OnCompletionA_Backward = function(params) fireit(params, "OnCompletionA_Backward") end
+        KCOM_OnCompletionB_Backward = function(params) fireit(params, "OnCompletionB_Backward") end
+        KCOM_OnCompletionC_Backward = function(params) fireit(params, "OnCompletionC_Backward") end
+        KCOM_OnCompletionD_Backward = function(params) fireit(params, "OnCompletionD_Backward") end
+        KCOM_OnCompletionE_Backward = function(params) fireit(params, "OnCompletionE_Backward") end
+        KCOM_OnCompletionF_Backward = function(params) fireit(params, "OnCompletionF_Backward") end
         KCOM_OnCompletionExitA = function(params) fireit(params, "OnCompletionExitA") end
         KCOM_OnCompletionExitB = function(params) fireit(params, "OnCompletionExitB") end
         KCOM_OnCompletionExitC = function(params) fireit(params, "OnCompletionExitC") end
@@ -525,6 +539,12 @@ function KiwisCoOpMod()
         KCOM_OnSoundGeneratedInside = function(params) fireit(params, "OnSoundGeneratedInside") end
         
         kcom_outputs = {
+            "OnOpen",
+            "OnClose",
+            "OnFullyOpen",
+            "OnFullyClosed",
+            "OnBlockedOpening",
+            "OnBlockedClosing",
             "OnTrigger",
             "OnStartTouch",
             "OnEndTouch",
@@ -927,6 +947,12 @@ function KiwisCoOpMod()
                     end
                 end
             end
+        end, "Kiwi's Co-Op Mod", 0);
+
+        Convars:RegisterCommand("kcom_sync_resources", function()
+            KCOM_RESOURCE_SNAPSHOT = nil;
+            KCOM_RESOURCE_SUPPRESS = nil;
+            KCOM_ResourceSnapshot();
         end, "Kiwi's Co-Op Mod", 0);
 
         Convars:RegisterCommand("kcom_setresources", function(command, energygun, rapidfire, shotgun, resin)

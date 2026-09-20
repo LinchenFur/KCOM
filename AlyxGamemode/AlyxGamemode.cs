@@ -69,13 +69,30 @@ namespace AlyxGamemode
             public ResourceSnapshot ClampNonNegative() => new(Math.Max(0, Energygun), Math.Max(0, Rapidfire), Math.Max(0, Shotgun), Math.Max(0, Resin));
         }
 
-        public static bool SharedResourceInventory
-        {
-            get => ResourceInventorySettings.Shared;
-            set => ResourceInventorySettings.Shared = value;
-        }
         private static ResourceSnapshot? sharedResources;
         private static readonly Dictionary<Guid, ResourceSnapshot> resourceSnapshots = new();
+        private static bool observedSharedResourceInventory = ResourceInventorySettings.Shared;
+
+        public static bool SharedResourceInventory
+        {
+            get
+            {
+                bool shared = ResourceInventorySettings.Shared;
+                if (shared != observedSharedResourceInventory)
+                {
+                    ResetResourceInventory();
+                    observedSharedResourceInventory = shared;
+                }
+                return shared;
+            }
+            set
+            {
+                ResourceInventorySettings.SetShared(value);
+                ResetResourceInventory();
+                observedSharedResourceInventory = value;
+            }
+        }
+
         public static void ResetResourceInventory()
         {
             sharedResources = null;
@@ -103,7 +120,10 @@ namespace AlyxGamemode
             {
                 Player? recipient = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
                 if (CanReceiveSync(recipient, sender, Guid.Empty))
+                {
                     broadcast.Session.Send(update.ToString());
+                    resourceSnapshots[broadcast.Session.ConnectionInfo.Id] = resources;
+                }
             }
         }
 

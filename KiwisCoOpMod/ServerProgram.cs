@@ -49,6 +49,15 @@ namespace KiwisCoOpMod
                 LuaEnvironment.instance.Handle(PluginHandleType.Server_PostGamemode_Think, tickrate, connections, Map.map);
             }
         }
+
+        public void RequestResourceSnapshots()
+        {
+            if (wss == null) return;
+            ActivityLog.Write("SERVER", Environment.UserName, Map.map, "request_resource_snapshots");
+            string command = new Response("command", "kcom_sync_resources").ToString();
+            foreach (IndexedClient client in connections.ToList())
+                client.Session.Send(command);
+        }
         public void Start(Type type, List<Type> plugins)
         {
             ActivityLog.Write("SERVER", Environment.UserName, Map.map, "start", type.Name);
@@ -70,7 +79,7 @@ namespace KiwisCoOpMod
                     LuaEnvironment.instance.Handle(PluginHandleType.Server_PostGamemode_PreStart, type, plugins, Map.map);
 
                     gamemodeType = type;
-                    KiwisCoOpModCore.ResourceInventorySettings.Shared = Settings.Default.ServerSharedResourceInventory;
+                    KiwisCoOpModCore.ResourceInventorySettings.SetShared(Settings.Default.ServerSharedResourceInventory);
                     wss = new WebSocketServer("ws://[::]:" + Settings.Default.ServerPort);
                     wss.Start(socket =>
                     {

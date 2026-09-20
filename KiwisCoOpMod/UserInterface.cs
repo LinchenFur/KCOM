@@ -68,7 +68,14 @@ namespace KiwisCoOpMod
                 CheckOnClick = true,
                 Checked = Settings.Default.ServerSharedResourceInventory
             };
-            sharedResources.Click += (_, _) => Settings.Default.ServerSharedResourceInventory = sharedResources.Checked;
+            sharedResources.Click += (_, _) =>
+            {
+                Settings.Default.ServerSharedResourceInventory = sharedResources.Checked;
+                KiwisCoOpModCore.ResourceInventorySettings.SetShared(sharedResources.Checked);
+                ActivityLog.Write("UI", Environment.UserName, Map.map, "toggle_shared_resources", sharedResources.Checked.ToString());
+                if (started && checkBoxServerEnabled.Checked)
+                    ServerProgram.instance.RequestResourceSnapshots();
+            };
             editToolStripMenuItem.DropDownItems.Insert(4, sharedResources);
             // Options
             saveOptionsOnExitToolStripMenuItem.Checked = Settings.Default.SaveOptionsOnExit;
