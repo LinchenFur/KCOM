@@ -540,6 +540,15 @@ namespace AlyxGamemode
                                                                     broadcast.Session.Send(JsonConvert.SerializeObject(hit));
                                                             }
                                                             break;
+                                                        case PacketType.ParentChanged:
+                                                            Response parent = new("command", "kcom_setparent " + packet.args[0] + " " + packet.args[1]);
+                                                            foreach (IndexedClient broadcast in connections)
+                                                            {
+                                                                Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
+                                                                    broadcast.Session.Send(JsonConvert.SerializeObject(parent));
+                                                            }
+                                                            break;
                                                         case PacketType.NPCHealth:
                                                             Response p = new("command", "kcom_npc_sethealth " + packet.args[0] + " " + packet.args[1]);
                                                             foreach (IndexedClient broadcast in connections)

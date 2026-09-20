@@ -129,6 +129,7 @@ internal static partial class Program
         Check(intervalLua.Contains("KCOM_ScanDynamicEntities") && intervalLua.Contains("prop_physics_interactive") && intervalLua.Contains("runner_electric_spit") && intervalLua.Contains("npc_antlionguard"), "NPC projectile and physics trackers");
         Check(intervalLua.Contains("player_hurt") && intervalLua.Contains("kcom_player_hurt") && intervalLua.Contains("HURT "), "player damage feedback sync");
         Check(intervalLua.Contains("KCOM_EntitySyncSpecific(entity, true)") && intervalLua.Contains("math.abs(origin[1] - object.origin[1]) > 0.5") && intervalLua.Contains("model = model"), "dynamic physics spawn and movement sync");
+        Check(intervalLua.Contains("GetMoveParent") && intervalLua.Contains("PARN ") && intervalLua.Contains("kcom_setparent"), "compound physics relationship sync");
         Check(intervalLua.Contains("kcom_remove_player"), "remote disconnect cleanup");
         TestMapNames();
         TestPlayerIndexes();
@@ -285,6 +286,7 @@ internal static partial class Program
             new Packet("SPWN", "item_test entity 1 2 3 bad;model KCOM"),
             new Packet("FIRE", "entity OnTrigger;quit KCOM"),
             new Packet("HURT", "4 86 1 NaN 3 KCOM"),
+            new Packet("PARN", "child bad;parent KCOM"),
         }) Check(!packet.IsValid(), "invalid packet rejected: " + packet.type);
         Check(new Packet("HEAD", "  1   2 3 4 5 6   KCOM ").IsValid(), "packet whitespace normalized");
     }

@@ -146,11 +146,25 @@ function KiwisCoOpMod()
             end
         end
 
+        local function KCOM_GetParentSyncName(entity)
+            local parent = entity:GetMoveParent();
+            if not IsValidEntity(parent) then return "NONE" end
+            local parentClass = parent:GetClassname();
+            if not kcom_trackers[parentClass] and not kcom_dynamic_trackers[parentClass] then return "NONE" end
+            KCOM_EntitySyncSpecific(parent, true);
+            return KCOM_GetSyncName(parent);
+        end
+
         function KCOM_CacheSync()
             KCOM_ScanDynamicEntities()
             for i, object in pairs(KCOM_ENTCACHE) do
                 local entity = object.entity;
                 if IsValidEntity(entity) then
+                    local parentName = KCOM_GetParentSyncName(entity);
+                    if object.parent ~= parentName then
+                        object.parent = parentName;
+                        print("PARN "..object.name.." "..parentName.." KCOM");
+                    end
                     if not string.find(object.class, "trigger_") then
                         local origin = entity:GetAbsOrigin();
                         local angles = entity:GetAnglesAsVector();
@@ -212,6 +226,7 @@ function KiwisCoOpMod()
             object.angles = entity:GetAnglesAsVector();
             object.class = entity:GetClassname();
             object.model = entity:GetModelName();
+            object.parent = "NONE";
             object.entity = entity; --entity:GetEntityIndex();
 
             
@@ -242,6 +257,9 @@ function KiwisCoOpMod()
             end
             if announce then
                 print("SPWN "..object.class.." "..object.name.." "..object.origin[1].." "..object.origin[2].." "..object.origin[3].." "..(object.model or "").." KCOM");
+                local parentName = KCOM_GetParentSyncName(entity);
+                object.parent = parentName;
+                if parentName ~= "NONE" then print("PARN "..object.name.." "..parentName.." KCOM"); end
             end
             return true, object.name, object.class
         end
@@ -825,6 +843,17 @@ function KiwisCoOpMod()
                     Player:SetAbsAngles(tonumber(pitch), tonumber(yaw), tonumber(roll));
                 end
             end
+        end, "Kiwi's Co-Op Mod", 0);
+
+        Convars:RegisterCommand("kcom_setparent", function(command, childName, parentName)
+            local child = KCOM_FindSyncEntity(childName);
+            if not child then return end
+            if parentName == "NONE" then
+                child:SetParent(nil, "");
+                return
+            end
+            local parent = KCOM_FindSyncEntity(parentName);
+            if parent and parent ~= child then child:SetParent(parent, ""); end
         end, "Kiwi's Co-Op Mod", 0);
 
         Convars:RegisterCommand("kcom_setlocation", function(command, name, x, y, z, pitch, yaw, roll)

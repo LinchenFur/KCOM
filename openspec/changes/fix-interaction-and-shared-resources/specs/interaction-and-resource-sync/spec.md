@@ -76,3 +76,19 @@ KCOM MUST discover common physics props such as bottles, cans, loose containers,
 - **WHEN** a physics prop is picked up or newly discovered and then moves
 - **THEN** the addon emits one stable `SPWN` followed by `PHYS` updates
 - **AND** the receiving client reuses the same entity for subsequent movement and removal events
+
+### Requirement: Compound physics relationships are synchronized
+
+KCOM MUST synchronize supported parent-child relationships between tracked physics entities, so a container and its contents keep the same relationship on receiving clients.
+
+#### Scenario: A container carries a tracked object
+
+- **WHEN** a tracked object becomes parented to a tracked container
+- **THEN** the addon emits `PARN <child> <parent> KCOM`
+- **AND** the server forwards `kcom_setparent` to other Ready clients on the same map
+
+#### Scenario: A contained object is released
+
+- **WHEN** the tracked object is detached from its container
+- **THEN** the addon emits `PARN <child> NONE KCOM`
+- **AND** the receiving client removes the parent relationship while retaining the child's synchronized transform
