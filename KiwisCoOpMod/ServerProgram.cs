@@ -51,6 +51,7 @@ namespace KiwisCoOpMod
         }
         public void Start(Type type, List<Type> plugins)
         {
+            ActivityLog.Write("SERVER", Environment.UserName, Map.map, "start", type.Name);
             if (wss == null)
             {
                 if (!Map.TryNormalize(Settings.Default.ServerMap, out string requestedMap))
@@ -101,6 +102,7 @@ namespace KiwisCoOpMod
         }
         public void Close()
         {
+            ActivityLog.Write("SERVER", Environment.UserName, Map.map, "close");
             executeThink = false;
             if (wss != null)
             {
@@ -163,6 +165,7 @@ namespace KiwisCoOpMod
                         LuaEnvironment.instance.Handle(PluginHandleType.Server_PostGamemode_ClientOpen, connections, socket, client.Username);
                     }
                     connections.ForEach(c => c.Session.Send(JsonConvert.SerializeObject(outputDisconnect)));
+                    ActivityLog.Write("SERVER", client.Username, client.Map, "client_connected");
                     Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, client.Username + " 已连接"));
                     break;
                 }
@@ -187,6 +190,7 @@ namespace KiwisCoOpMod
                         LuaEnvironment.instance.Handle(PluginHandleType.Server_PostGamemode_ClientClose, connections, socket, client.Username);
                     }
                     connections.ForEach(c => c.Session.Send(JsonConvert.SerializeObject(outputDisconnect)));
+                    ActivityLog.Write("SERVER", client.Username, client.Map, "client_disconnected");
                     Program.userInterface.Invoke(() => Program.userInterface.LogToOutput(channel, client.Username + " 已断开连接"));
                     connections.Remove(client);
                     break;
@@ -210,6 +214,11 @@ namespace KiwisCoOpMod
         public void OnMessage(string message, IWebSocketConnection socket)
         {
             Response ? response = JsonConvert.DeserializeObject<Response>(message);
+            if (response != null && response.type != null)
+            {
+                IndexedClient? source = connections.Find(c => c.Session.ConnectionInfo.Id == socket.ConnectionInfo.Id);
+                ActivityLog.Write("SERVER", source?.Username, source?.Map ?? Map.map, "receive_" + response.type, response.type == "client" ? response.clientUsername : response.data);
+            }
             if (gamemodeType != null && response != null && response.type != null)
             {
                 PluginHandler.Handle(plugins, PluginHandleType.Server_PreGamemode_PreResponse, response, connections, socket, Map.map);

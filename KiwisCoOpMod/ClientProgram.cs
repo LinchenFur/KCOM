@@ -61,6 +61,7 @@ namespace KiwisCoOpMod
         }
         public void Start(List<Type> pluginTypes)
         {
+            ActivityLog.Write("CLIENT", Settings.Default.ClientUsername, map, "start", Settings.Default.ClientIpAddress + ":" + Settings.Default.ClientPort);
             bool error = false;
             if (ws == null)
             {
@@ -86,6 +87,7 @@ namespace KiwisCoOpMod
                     Response? response = JsonConvert.DeserializeObject<Response>(msg.Text);
                     if (response != null && response.type != null)
                     {
+                        ActivityLog.Write("CLIENT", Settings.Default.ClientUsername, map, "receive_" + response.type, response.type == "authenticated" ? response.map : response.data);
                         PluginHandler.Handle(plugins, PluginHandleType.Client_PreResponse, response);
                         LuaEnvironment.instance.Handle(PluginHandleType.Client_PreResponse, response);
                         switch (response.type)
@@ -124,6 +126,7 @@ namespace KiwisCoOpMod
                             case "command":
                                 if (vConsole != null && response.data != null)
                                 {
+                                    ActivityLog.Write("CLIENT", Settings.Default.ClientUsername, map, "execute_command", response.data);
                                     vConsole.WriteCommand(response.data, response.urgent);
                                 }
                                 break;
@@ -179,6 +182,7 @@ namespace KiwisCoOpMod
         }
         public void Close()
         {
+            ActivityLog.Write("CLIENT", Settings.Default.ClientUsername, map, "close");
             vConsole?.Disconnect();
             if (ws != null)
             {
@@ -195,6 +199,7 @@ namespace KiwisCoOpMod
         {
             if (ws != null && ws.IsStarted && text.Length > 0)
             {
+                ActivityLog.Write("CLIENT", Settings.Default.ClientUsername, map, "chat_send", text);
                 Response chatResponse = new("chat", text);
                 chatResponse.timestamp = (long)DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalMilliseconds;
                 ws.Send(chatResponse.ToString());

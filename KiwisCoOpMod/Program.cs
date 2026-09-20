@@ -32,6 +32,7 @@ namespace KiwisCoOpMod
         [STAThread]
         static void Main(string[] args)
         {
+            ActivityLog.Write("APP", Environment.UserName, "", "start", "args=" + args.Length);
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.SetHighDpiMode(HighDpiMode.DpiUnaware);

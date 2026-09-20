@@ -114,6 +114,9 @@ internal static partial class Program
             Check(count == 0, "invalid frame resynchronization");
         }
         await TestTransport(longText);
+        string activityMarker = "activity-log-test-" + Guid.NewGuid().ToString("N");
+        ActivityLog.Write("TEST", "Tester", "mp_kiwitest", "operation", activityMarker);
+        Check(File.ReadAllText(ActivityLog.CurrentFilePath).Contains(activityMarker), "persistent activity log");
         TestLuaBootstrap(multilingual);
         string intervalLua = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "kcom_interval.lua"));
         Check(intervalLua.Contains("RESC ") && intervalLua.Contains("kcom_setresources"), "Lua resource snapshot protocol");

@@ -253,9 +253,12 @@ namespace AlyxGamemode
                                             string packetType = packetList[0];
                                             packetList.Remove(packetType);
                                             Packet packet = new(packetType, packetList.ToArray());
-                                            if (packet.IsValid())
+                                            Player? logPlayer = AlyxGlobalData.instance.GetPlayer(socket.ConnectionInfo.Id);
+                                            bool validPacket = packet.IsValid();
+                                            ActivityLog.Write("SYNC", logPlayer?.Client.Username, logPlayer?.Client.Map ?? map, validPacket ? packet.ToString() : "invalid_packet", validPacket ? string.Join(" ", packet.args.Take(Math.Max(0, packet.args.Length - 1))) : response.data);
+                                            if (validPacket)
                                             {
-                                                Player? pair = AlyxGlobalData.instance.GetPlayer(socket.ConnectionInfo.Id);
+                                                Player? pair = logPlayer;
                                                 if (pair != null)
                                                 {
                                                     Player player = pair;
@@ -570,8 +573,10 @@ namespace AlyxGamemode
                         break;
                 }
             }
-            catch
-            {}
+            catch (Exception e)
+            {
+                ActivityLog.Write("SYNC", "", "", "error", e.ToString());
+            }
         }
     }
 }

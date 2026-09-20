@@ -50,9 +50,11 @@ namespace KiwisCoOpMod
                 client = new TcpClient();
                 if (!client.ConnectAsync("127.0.0.1", Settings.Default.VconsolePort).Wait(2000))
                 {
+                    ActivityLog.Write("VCONSOLE", Settings.Default.ClientUsername, "", "connect_failed", "127.0.0.1:" + Settings.Default.VconsolePort);
                     Disconnect();
                     return false;
                 }
+                ActivityLog.Write("VCONSOLE", Settings.Default.ClientUsername, "", "connected", "127.0.0.1:" + Settings.Default.VconsolePort);
                 stream = client.GetStream();
                 stream.WriteTimeout = 2000;
                 watcher = new StreamWatcher(stream);
@@ -115,6 +117,7 @@ namespace KiwisCoOpMod
             if (sender != watcher || ws == null || !ws.IsStarted || e.MessageType != "PRNT") return;
             foreach (string line in VConsoleProtocol.PrintLines(e.Data))
             {
+                ActivityLog.Write("VCONSOLE", Settings.Default.ClientUsername, "", "game_print", line);
                 Response input = new("print", line);
                 input.timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 ws.Send(JsonConvert.SerializeObject(input));
@@ -149,6 +152,7 @@ namespace KiwisCoOpMod
 
         public void WriteCommand(string command, bool urgent = false)
         {
+            ActivityLog.Write("VCONSOLE", Settings.Default.ClientUsername, "", "send_command", command);
             byte[] frame = VConsoleProtocol.Command(command, Convert.ToByte(Settings.Default.VconsoleProtocol));
             lock (writeLock)
             {

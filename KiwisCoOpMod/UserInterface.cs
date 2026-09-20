@@ -43,6 +43,7 @@ namespace KiwisCoOpMod
             AutoScaleMode = AutoScaleMode.None;
             Font = new Font(Font.Name, 8.25f * 96f / CreateGraphics().DpiX, Font.Style, Font.Unit, Font.GdiCharSet, Font.GdiVerticalFont);
             InitializeComponent();
+            LogToOutputGeneric("操作日志文件：", ActivityLog.CurrentFilePath);
             // Status bar
             toolStripStatusLabelConnection.Text = "未启动";
             toolStripStatusLabelConnection.ForeColor = Color.Red;
@@ -192,6 +193,7 @@ namespace KiwisCoOpMod
         }
         public void UseArgs(string[] args)
         {
+            ActivityLog.Write("UI", Environment.UserName, Map.map, "arguments", "count=" + args.Length);
             if (args.Length >= 2)
             {
                 switch (args[0].ToLower())
@@ -219,12 +221,14 @@ namespace KiwisCoOpMod
                             Settings.Default.ClientPassword = "";
                             textBoxClientPassword.Text = "";
                         }
+                        ActivityLog.Write("UI", Environment.UserName, Map.map, "connect_uri", ipPort[0] + (ipPort.Length > 1 ? ":" + ipPort[1] : ""));
                         break;
                 }
             }
         }
         private void Save()
         {
+            ActivityLog.Write("UI", Environment.UserName, Map.map, "save_settings");
             Settings.Default.CurrentAddons = JsonConvert.SerializeObject(currentAddons);
             Settings.Default.Save();
         }
@@ -235,6 +239,7 @@ namespace KiwisCoOpMod
 
         public void Start()
         {
+            ActivityLog.Write("UI", Environment.UserName, Map.map, started ? "stop_clicked" : "start_clicked");
             if(!started && (checkBoxServerEnabled.Checked || checkBoxClientEnabled.Checked))
             {
                 // Silent listen server toggle
@@ -302,6 +307,7 @@ namespace KiwisCoOpMod
                                         currentAddons.Remove(menuItem.Text);
                                 }
                                 gamemodeType = initializer.Type;
+                                ActivityLog.Write("UI", Environment.UserName, Map.map, "select_gamemode", item.Text);
                                 item.Checked = true;
                                 if (!currentAddons.Contains(item.Text))
                                     currentAddons.Add(item.Text);
@@ -312,6 +318,7 @@ namespace KiwisCoOpMod
                                 if (item.Checked)
                                 {
                                     plugins.Add(initializer.Type);
+                                    ActivityLog.Write("UI", Environment.UserName, Map.map, "enable_plugin", item.Text);
                                     if (!currentAddons.Contains(item.Text))
                                         currentAddons.Add(item.Text);
                                     PluginHandler.Handle(initializer.Type, PluginHandleType.UserInterface_Initialized);
@@ -320,6 +327,7 @@ namespace KiwisCoOpMod
                                 else
                                 {
                                     PluginHandler.Handle(initializer.Type, PluginHandleType.UserInterface_Exit);
+                                    ActivityLog.Write("UI", Environment.UserName, Map.map, "disable_plugin", item.Text);
                                     plugins.Remove(initializer.Type);
                                     if (currentAddons.Contains(item.Text))
                                         currentAddons.Remove(item.Text);
@@ -335,6 +343,7 @@ namespace KiwisCoOpMod
 
         public void LogToOutputGeneric(params object[] text)
         {
+            ActivityLog.Write("UI", Environment.UserName, "", "message", string.Join(" ", text));
             richTextBoxOutput.Select(richTextBoxOutput.TextLength, 0);
             richTextBoxOutput.SelectionColor = Color.Black;
             richTextBoxOutput.AppendText("\n" + string.Join(" ", text));
@@ -342,6 +351,7 @@ namespace KiwisCoOpMod
 
         public void LogToOutput(Channel channel, params object[] text)
         {
+            ActivityLog.Write(channel.GetName(), Environment.UserName, Map.map, "message", string.Join(" ", text));
             /*
             if(richTextBoxOutput.Lines.Length+1 >= 64)
             {
@@ -540,6 +550,7 @@ namespace KiwisCoOpMod
 
         private void ButtonServerChangeMap_Click(object sender, EventArgs e)
         {
+            ActivityLog.Write("UI", Environment.UserName, Map.map, "change_map", Settings.Default.ServerMap);
             ServerProgram.instance.ChangeMap(Settings.Default.ServerMap);
         }
 
