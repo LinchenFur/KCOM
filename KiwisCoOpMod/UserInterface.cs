@@ -395,14 +395,9 @@ namespace KiwisCoOpMod
             toolStripStatusLabelConnection.Text = channel + string.Join(" ", text);
         }
 
-        private void DiscordToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Process.Start(new ProcessStartInfo("https://discord.gg/3X3teNecWs") { UseShellExecute = true });
-        }
-
         private void GitHubToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start(new ProcessStartInfo("https://github.com/TeamPopplio/kcom") { UseShellExecute = true });
+            Process.Start(new ProcessStartInfo("https://github.com/LinchenFur/KCOM") { UseShellExecute = true });
         }
 
         private void CheckBoxClientEnabled_CheckedChanged(object sender, EventArgs e)
@@ -419,11 +414,6 @@ namespace KiwisCoOpMod
                 "VConsole" => "服务器",
                 _ => "聊天",
             };
-        }
-
-        private void SteamWorkshopToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Process.Start(new ProcessStartInfo("https://steamcommunity.com/sharedfiles/filedetails/?id=2739356543") { UseShellExecute = true });
         }
 
         private void ClientPrintVConsoleToolStripMenuItem_CheckedChanged(object sender, EventArgs e)
@@ -589,9 +579,5 @@ namespace KiwisCoOpMod
             }
         }
 
-        private void koFiToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Process.Start(new ProcessStartInfo("https://ko-fi.com/kiwifruitdev") { UseShellExecute = true });
-        }
     }
 }

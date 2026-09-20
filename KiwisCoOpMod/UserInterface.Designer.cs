@@ -46,12 +46,8 @@ namespace KiwisCoOpMod
             this.saveOptionsOnExitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.alwaysOnTopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.discordToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.gitHubToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.steamWorkshopToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.koFiToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.checkBoxServerEnabled = new System.Windows.Forms.CheckBox();
             this.checkBoxClientEnabled = new System.Windows.Forms.CheckBox();
@@ -122,7 +118,6 @@ namespace KiwisCoOpMod
             this.fileToolStripMenuItem,
             this.editToolStripMenuItem,
             this.viewToolStripMenuItem,
-            this.helpToolStripMenuItem,
             this.aboutToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
@@ -226,27 +221,10 @@ namespace KiwisCoOpMod
             this.alwaysOnTopToolStripMenuItem.Text = "始终置顶";
             this.alwaysOnTopToolStripMenuItem.Click += new System.EventHandler(this.alwaysOnTopToolStripMenuItem_Click);
             // 
-            // helpToolStripMenuItem
-            // 
-            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.discordToolStripMenuItem});
-            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.helpToolStripMenuItem.Text = "帮助";
-            // 
-            // discordToolStripMenuItem
-            // 
-            this.discordToolStripMenuItem.Name = "discordToolStripMenuItem";
-            this.discordToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
-            this.discordToolStripMenuItem.Text = "Discord 社区";
-            this.discordToolStripMenuItem.Click += new System.EventHandler(this.DiscordToolStripMenuItem_Click);
-            // 
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.gitHubToolStripMenuItem,
-            this.steamWorkshopToolStripMenuItem,
-            this.koFiToolStripMenuItem});
+            this.gitHubToolStripMenuItem});
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(52, 20);
             this.aboutToolStripMenuItem.Text = "关于";
@@ -254,23 +232,9 @@ namespace KiwisCoOpMod
             // gitHubToolStripMenuItem
             // 
             this.gitHubToolStripMenuItem.Name = "gitHubToolStripMenuItem";
-            this.gitHubToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.gitHubToolStripMenuItem.Text = "GitHub";
+            this.gitHubToolStripMenuItem.Size = new System.Drawing.Size(360, 22);
+            this.gitHubToolStripMenuItem.Text = "GitHub（原作者：KiwifruitDev；现作者：LinchenFur）";
             this.gitHubToolStripMenuItem.Click += new System.EventHandler(this.GitHubToolStripMenuItem_Click);
-            // 
-            // steamWorkshopToolStripMenuItem
-            // 
-            this.steamWorkshopToolStripMenuItem.Name = "steamWorkshopToolStripMenuItem";
-            this.steamWorkshopToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.steamWorkshopToolStripMenuItem.Text = "Steam 创意工坊";
-            this.steamWorkshopToolStripMenuItem.Click += new System.EventHandler(this.SteamWorkshopToolStripMenuItem_Click);
-            // 
-            // koFiToolStripMenuItem
-            // 
-            this.koFiToolStripMenuItem.Name = "koFiToolStripMenuItem";
-            this.koFiToolStripMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.koFiToolStripMenuItem.Text = "通过 Ko-fi 捐赠";
-            this.koFiToolStripMenuItem.Click += new System.EventHandler(this.koFiToolStripMenuItem_Click);
             // 
             // checkBoxServerEnabled
             // 
@@ -717,12 +681,10 @@ namespace KiwisCoOpMod
         private RichTextBox richTextBoxOutput;
         private MenuStrip menuStrip;
         private ToolStripMenuItem fileToolStripMenuItem;
-        private ToolStripMenuItem helpToolStripMenuItem;
         private ToolTip toolTip;
         private StatusStrip statusStrip;
         private TextBox textBoxInput;
         private ToolStripStatusLabel toolStripStatusLabelVersion;
-        private ToolStripMenuItem discordToolStripMenuItem;
         private Button buttonStart;
         private ToolStripStatusLabel toolStripStatusLabelVconsolePort;
         private ToolStripStatusLabel toolStripStatusLabelConnection;
@@ -771,8 +733,6 @@ namespace KiwisCoOpMod
         private ToolStripMenuItem viewToolStripMenuItem;
         private ToolStripMenuItem alwaysOnTopToolStripMenuItem;
         private ToolStripMenuItem aboutToolStripMenuItem;
-        private ToolStripMenuItem koFiToolStripMenuItem;
-        private ToolStripMenuItem steamWorkshopToolStripMenuItem;
         private ToolStripMenuItem serverDisableUserVConsoleInputToolStripMenuItem;
         private ToolStripMenuItem clientPrintVConsoleToolStripMenuItem;
         private ToolStripMenuItem gitHubToolStripMenuItem;

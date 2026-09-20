@@ -1,22 +1,25 @@
 # Kiwi's Co-Op Mod for Half-Life: Alyx
 
-<a href="https://github.com/TeamPopplio/KCOM"><img align="left" width="256" src="https://i.imgur.com/qIIjxCs.png"></a>
+<a href="https://github.com/LinchenFur/KCOM"><img align="left" width="256" src="https://i.imgur.com/qIIjxCs.png"></a>
 
-[![Releases](https://img.shields.io/github/v/tag/teampopplio/kcom?label=release)](https://github.com/teampopplio/kcom/releases)
+[![Releases](https://img.shields.io/github/v/tag/LinchenFur/KCOM?label=release)](https://github.com/LinchenFur/KCOM/releases)
 
-[![Downloads](https://img.shields.io/github/downloads/teampopplio/kcom/total)](https://github.com/teampopplio/kcom/releases)
+[![Downloads](https://img.shields.io/github/downloads/LinchenFur/KCOM/total)](https://github.com/LinchenFur/KCOM/releases)
 
 [![Workshop Subscribers](https://img.shields.io/steam/subscriptions/2739356543?label=workshop%20subscribers)](https://steamcommunity.com/sharedfiles/filedetails/?id=2739356543)
 
-[![Discord](https://img.shields.io/discord/738131767944282183?label=discord)](https://discord.gg/3X3teNecWs)
+[![License](https://img.shields.io/badge/license-mit-green.svg)](https://github.com/LinchenFur/KCOM/blob/main/LICENSE.md)
 
-[![License](https://img.shields.io/badge/license-mit-green.svg)](https://github.com/TeamPopplio/KCOM/blob/main/LICENSE.md)
-
-[![Contributors](https://img.shields.io/github/contributors/teampopplio/kcom)](https://github.com/teampopplio/kcom/graphs/contributors)
+[![Contributors](https://img.shields.io/github/contributors/LinchenFur/KCOM)](https://github.com/LinchenFur/KCOM/graphs/contributors)
 
 --------
 
 ### Kiwi's Co-Op Mod for Half-Life: Alyx (KCOM) is a cooperative experience for Half-Life: Alyx.
+
+## Authors and Maintainers
+
+- Original author: [KiwifruitDev / original KCOM project](https://github.com/KiwifruitDev/KCOM)
+- Current maintainer: [LinchenFur / current KCOM project](https://github.com/LinchenFur/KCOM)
 
 ## Features
 
@@ -33,7 +36,7 @@
 ## Installation
 
 - Subscribe to the [Workshop Addon](https://steamcommunity.com/sharedfiles/filedetails/?id=2739356543) on Steam
-- Download the [latest release](https://github.com/TeamPopplio/KCOM/releases) from GitHub
+- Download the [latest release](https://github.com/LinchenFur/KCOM/releases) from GitHub
 - Extract the contents of the zip file to a safe place (e.g. a new folder on your desktop)
 - Set the following launch options for Half-Life: Alyx in Steam: `-console -vconsole`
 - Launch the game
@@ -174,12 +177,12 @@ KCOM_EmitCompatibility("my_weapon", "fire", "shot_1")
 ### Lua Documentation
 Coming soon!
 
-Check out the [Discord](https://discord.gg/3X3teNecWs) for Lua help if needed.
+For Lua help, use [GitHub Issues](https://github.com/LinchenFur/KCOM/issues).
 
 ### Script Redistribution
 You are free to modify and redistribute KCOM's default ("base") Lua scripts without permission, however when it comes to others' scripts, please provide credit to the original author(s) and link to the original source.
 
-Feel free to provide scripts to the KCOM community via the [Discord](https://discord.gg/3X3teNecWs) as there is a dedicated channel for Lua scripting.
+Submit script improvements and compatibility suggestions through [GitHub](https://github.com/LinchenFur/KCOM).
 
 ## Debugging/Modding
 
@@ -228,4 +231,4 @@ For addon development, you may want to "symlink" folders from this repository to
 
 ## Help & Support
 
-Join the [Discord](https://discord.gg/3X3teNecWs) for support between users and developers.
+For support, open a ticket in [GitHub Issues](https://github.com/LinchenFur/KCOM/issues).
