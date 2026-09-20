@@ -12,6 +12,7 @@ KCOM_RESOURCE_SUPPRESS = nil;
 KCOM_COMPAT_EVENTS = {};
 KCOM_COMPAT_HANDLERS = {};
 KCOM_COMPAT_RESOURCES = {};
+KCOM_HEARTBEAT = 0;
 
 print("KCOM Enabled!");
 
@@ -82,6 +83,11 @@ end
 
 function KiwisCoOpMod()
     if KCOM_ACTIVE then
+        KCOM_HEARTBEAT = KCOM_HEARTBEAT + 1;
+        if KCOM_HEARTBEAT >= 30 then
+            KCOM_HEARTBEAT = 0;
+            print("ALIV KCOM");
+        end
         if kcom_inbetween >= 5 then
             kcom_inbetween = 0;
             local playerOrigin = Player:GetOrigin();
@@ -379,20 +385,21 @@ function KiwisCoOpMod()
             -- npcs are loose on purpose as they continuously move
         };
 
+        local function KCOM_GetSyncName(entity)
+            for key, object in pairs(KCOM_ENTCACHE) do
+                if object.entity == entity then return key end
+            end
+            return entity:GetName()
+        end
+
         local function KCOM_PickupSync(data)
             local handId = util.GetHandIdFromTip(data.vr_tip_attachment)
             local hand = Player.Hands[handId + 1]
             local ent_held = util.EstimateNearestEntity(data.item_name, data.item, hand:GetOrigin())
             if IsValidEntity(ent_held) then
                 KCOM_EntitySyncSpecific(ent_held)
-                local syncName
-                for key, object in pairs(KCOM_ENTCACHE) do
-                    if object.entity == ent_held then
-                        syncName = key
-                        break
-                    end
-                end
-                if not syncName then return end
+                local syncName = KCOM_GetSyncName(ent_held)
+                if not syncName or syncName == "" then return end
                 local origin = ent_held:GetOrigin()
                 print("SPWN " .. data.item .. " " .. syncName .. " " .. origin[1] .. " " .. origin[2] .. " " .. origin[3] .. " KCOM")
             end
@@ -410,16 +417,9 @@ function KiwisCoOpMod()
             if not IsValidEntity(ent) then
                 return -- the entity must have been deleted?
             end
-            local name = ent:GetName();
-            if not KCOM_USE_UUIDS then
-                if name ~= "" then
-                    print("FIRE "..name.." "..output.." KCOM");
-                end
-            else
-                local class = ent:GetClassname();
-                local origin = ent:GetOrigin();
-                local uu = uuid(name, origin[1], origin[2], origin[3], class);
-                print("FIRE "..uu.." "..output.." KCOM");
+            local name = KCOM_GetSyncName(ent);
+            if name ~= "" then
+                print("FIRE "..name.." "..output.." KCOM");
             end
         end
 
@@ -624,6 +624,7 @@ function KiwisCoOpMod()
         };
 
         KCOM_ACTIVE = true;
+        KCOM_HEARTBEAT = 0;
         kcom_heads = {};
         kcom_lefthands = {};
         kcom_righthands = {};
@@ -708,6 +709,19 @@ function KiwisCoOpMod()
             end
             if IsValidEntity(entity) then
                 entity:SetAbsOrigin(Vector(tonumber(x), tonumber(y), tonumber(z)))
+            end
+        end, "Kiwi's Co-Op Mod", 0);
+
+        Convars:RegisterCommand("kcom_remove_player", function(command, index)
+            local origin = Vector(16128, 16128, 16128)
+            for _, prefix in ipairs({"kcom_head_", "kcom_lefthand_", "kcom_righthand_", "kcom_text_"}) do
+                local entity = Entities:FindByName(nil, prefix .. index)
+                if IsValidEntity(entity) then
+                    entity:SetAbsOrigin(origin)
+                    if prefix == "kcom_text_" then
+                        DoEntFireByInstanceHandle(entity, "SetMessage", "", 0, nil, nil)
+                    end
+                end
             end
         end, "Kiwi's Co-Op Mod", 0);
 

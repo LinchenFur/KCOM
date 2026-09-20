@@ -143,10 +143,18 @@ namespace AlyxGamemode
                             Player? player = AlyxGlobalData.instance.GetPlayer(closeSocket.ConnectionInfo.Id);
                             if (player != null)
                             {
+                                Response removeProxy = new("command", "kcom_remove_player " + player.Index);
+                                foreach (IndexedClient recipientClient in closeConnections)
+                                {
+                                    Player? recipient = AlyxGlobalData.instance.GetPlayer(recipientClient.Session.ConnectionInfo.Id);
+                                    if (CanReceiveSync(recipient, player, closeSocket.ConnectionInfo.Id))
+                                        recipientClient.Session.Send(removeProxy.ToString());
+                                }
                                 lock (player)
                                 {
                                     player.InitializationGeneration++;
                                     player.InitializationStage = InitializationStage.None;
+                                    player.SyncHeartbeatReported = false;
                                     resourceSnapshots.Remove(closeSocket.ConnectionInfo.Id);
                                     compatibilityEvents.Remove(closeSocket.ConnectionInfo.Id);
                                     AlyxGlobalData.instance.RemovePlayer(closeSocket.ConnectionInfo.Id);
@@ -207,6 +215,7 @@ namespace AlyxGamemode
                                                 {
                                                     readyPlayer.InitializationGeneration++;
                                                     readyPlayer.InitializationStage = InitializationStage.AwaitInit;
+                                                    readyPlayer.SyncHeartbeatReported = false;
                                                     Response initialize = new("command", "sv_cheats 1;ent_remove_all kcom_script;ent_remove_all kcom_timer;echo INIT KCOM");
                                                     socket.Send(JsonConvert.SerializeObject(initialize));
                                                 }
@@ -394,6 +403,12 @@ namespace AlyxGamemode
                                                         case PacketType.ColliderIndexes:
                                                         case PacketType.Prefix:
                                                         case PacketType.Alive:
+                                                            if (player.InitializationStage == InitializationStage.Ready && !player.SyncHeartbeatReported)
+                                                            {
+                                                                player.SyncHeartbeatReported = true;
+                                                                socket.Send(new Response("status", "已收到游戏同步心跳；玩家、门、怪物和物品同步通道正常。").ToString());
+                                                            }
+                                                            break;
                                                         case PacketType.ColliderDamage:
                                                         case PacketType.PhysicsObjectIndexStartPos:
                                                             break;

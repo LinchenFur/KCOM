@@ -30,6 +30,7 @@ namespace AlyxGamemode
         // Guard together with lock(player); delayed work belongs to exactly one attempt.
         public int InitializationGeneration;
         public InitializationStage InitializationStage;
+        public bool SyncHeartbeatReported;
         public IndexedClient Client;
         public Player(int index, IndexedClient client)
         {

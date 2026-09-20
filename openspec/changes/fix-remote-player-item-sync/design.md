@@ -5,6 +5,8 @@
 - SPWN 的第二个字段改为发送端实体缓存中的同步键，而不是可能与 UUID 不一致的本地 targetname。
 - 接收端新增最小 `kcom_spawn` 命令：优先寻找同名实体，不存在时创建并定位；位置、输出、破坏和生命值命令均允许按 targetname 回退。
 - 代理实体仍使用已有 `kcom_setlocation_nonuuid`，只增加单实体查找回退，不引入新的网络消息格式。
+- FIRE 使用缓存中的稳定键，不再根据门当前旋转后的坐标重新计算 UUID。
+- addon 每隔一段时间发送 `ALIV KCOM`；服务器首次收到后显示同步通道状态。断开连接时服务器发送 `kcom_remove_player`，接收端把代理移出地图。
 
 ## Non-Goals
 

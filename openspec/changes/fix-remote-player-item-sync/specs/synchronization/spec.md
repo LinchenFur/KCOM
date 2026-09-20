@@ -25,3 +25,17 @@ The addon MUST resolve named player proxy entities when processing remote head a
 - **WHEN** the client receives a `kcom_setlocation_nonuuid` command for a player proxy
 - **THEN** it locates the named proxy and applies the update instead of silently dropping it
 
+
+### Requirement: The game script exposes synchronization health and disconnect cleanup
+
+The addon MUST periodically report a lightweight heartbeat after initialization, and the server MUST clear a disconnected player's remote proxy on other ready clients.
+
+#### Scenario: The game timer is running
+
+- **WHEN** the initialized addon executes its interval callback
+- **THEN** it periodically emits `ALIV KCOM` so the server can distinguish a live sync loop from a connected but inactive WebSocket
+
+#### Scenario: A ready client disconnects
+
+- **WHEN** the server receives the client's close event
+- **THEN** other ready clients receive a cleanup command and move that player's head, hands, and label out of the map
