@@ -91,13 +91,13 @@ namespace KiwisCoOpMod
                         switch (response.type)
                         {
                             case "authenticated":
-                                if (response.version > Response.internalVersion)
+                                if (response.version != Response.internalVersion)
                                 {
-                                    ui.Invoke(() => ui.LogToOutput(channel, "客户端版本较旧！请更新客户端。"));
-                                }
-                                else if (response.version < Response.internalVersion)
-                                {
-                                    ui.Invoke(() => ui.LogToOutput(channel, "服务器版本较旧！请联系服务器主机更新。"));
+                                    string versionMessage = response.version > Response.internalVersion
+                                        ? "客户端版本较旧！请更新客户端。"
+                                        : "服务器版本较旧或版本缺失！请联系服务器主机更新。";
+                                    ui.Invoke(() => ui.LogToOutput(channel, versionMessage + "已停止本次初始化。"));
+                                    break;
                                 }
                                 if (!Map.TryNormalize(response.map, out string requestedMap))
                                 {

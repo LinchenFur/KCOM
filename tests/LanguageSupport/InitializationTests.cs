@@ -38,6 +38,7 @@ internal static partial class Program
         Settings.Default.ClientPort = serverPort;
         string serverMap = "mp_kiwitest";
         int authentications = 0;
+        int? serverVersion = Response.internalVersion;
         IWebSocketConnection? lastSocket = null;
         FleckLog.Level = LogLevel.Error;
         using var server = new WebSocketServer("ws://127.0.0.1:" + serverPort);
@@ -47,7 +48,7 @@ internal static partial class Program
             if (request?.type != "client") return;
             Interlocked.Increment(ref authentications);
             lastSocket = socket;
-            socket.Send(new Response("authenticated") { map = serverMap }.ToString());
+            socket.Send(new Response("authenticated") { map = serverMap, version = serverVersion }.ToString());
         });
         var listener = new TcpListener(IPAddress.Loopback, 0);
         listener.Start();
@@ -92,15 +93,28 @@ internal static partial class Program
             await DrainToEnd(wire2);
             Check(true, "manual stop closes console/probe");
 
-            serverMap = "mp_kiwitest;quit";
+            serverVersion = 0;
+            serverMap = "mp_kiwitest";
             ui.Messages.Clear();
             client.Start(new());
             using var game3 = await listener.AcceptTcpClientAsync().WaitAsync(TimeSpan.FromSeconds(5));
             using var wire3 = game3.GetStream();
             await ReadFrame(wire3);
+            await WaitFor(() => ui.Messages.Any(x => x.Contains("已停止本次初始化")));
+            await Task.Delay(100);
+            Check(!wire3.DataAvailable, "version mismatch sends no map command or probe");
+            client.Close();
+
+            serverVersion = Response.internalVersion;
+            serverMap = "mp_kiwitest;quit";
+            ui.Messages.Clear();
+            client.Start(new());
+            using var game4 = await listener.AcceptTcpClientAsync().WaitAsync(TimeSpan.FromSeconds(5));
+            using var wire4 = game4.GetStream();
+            await ReadFrame(wire4);
             await WaitFor(() => ui.Messages.Any(x => x.Contains("地图名无效")));
             await Task.Delay(100);
-            Check(!wire3.DataAvailable, "malformed authenticated map sends no command or probe");
+            Check(!wire4.DataAvailable, "malformed authenticated map sends no command or probe");
         }
         finally { client.Close(); listener.Stop(); }
     }

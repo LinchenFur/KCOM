@@ -116,6 +116,7 @@ internal static partial class Program
         await TestTransport(longText);
         TestLuaBootstrap(multilingual);
         TestMapNames();
+        TestPlayerIndexes();
         await TestGamemode();
         await TestClientStartup();
         Console.WriteLine($"PASS: {checks} language support checks (mock game/loopback, not a live Alyx playtest).");
@@ -228,6 +229,21 @@ internal static partial class Program
         Run(); Check(Count() == 5, "new map readiness");
     }
 
+    static void TestPlayerIndexes()
+    {
+        var sockets = Enumerable.Range(0, 4).Select(_ => DispatchProxy.Create<IWebSocketConnection, SocketProxy>()).ToArray();
+        var clients = sockets.Select((socket, i) => new IndexedClient(socket, "玩家" + i, "mp_kiwitest")).ToArray();
+        var first = AlyxGlobalData.instance.AddPlayer(clients[0]);
+        var middle = AlyxGlobalData.instance.AddPlayer(clients[1]);
+        var last = AlyxGlobalData.instance.AddPlayer(clients[2]);
+        Check(first?.Index == 0 && middle?.Index == 1 && last?.Index == 2, "player indexes start at zero");
+        Check(AlyxGlobalData.instance.RemovePlayer(clients[1].Session.ConnectionInfo.Id), "middle player removed");
+        Check(!AlyxGlobalData.instance.RemovePlayer(clients[1].Session.ConnectionInfo.Id), "missing player removal reports false");
+        var reused = AlyxGlobalData.instance.AddPlayer(clients[3]);
+        Check(reused?.Index == 1 && last?.Index == 2, "freed player index reused without renumbering");
+        foreach (IndexedClient client in clients) AlyxGlobalData.instance.RemovePlayer(client.Session.ConnectionInfo.Id);
+    }
+
     static async Task TestGamemode()
     {
         CultureInfo previous = CultureInfo.CurrentCulture;
@@ -250,19 +266,31 @@ internal static partial class Program
                 Feed("KRDY KCOM");
                 Check(proxy.Sent.Any(r => r.data?.Contains("echo INIT KCOM") == true), "readiness " + locale);
                 Check(proxy.Sent.Any(r => r.data?.Contains("ent_remove_all kcom_timer") == true), "timer cleanup " + locale);
-                Check(AlyxGlobalData.instance.GetPlayer(proxy.ID) != null, "player registered " + locale);
+                Player? clientPlayer = AlyxGlobalData.instance.GetPlayer(proxy.ID);
+                Check(clientPlayer != null, "player registered " + locale);
                 Feed("INIT KCOM");
                 Check(proxy.Sent.Any(r => r.data?.Contains("vscripts kcom_interval") == true), "INIT chain " + locale);
                 var peerSocket = DispatchProxy.Create<IWebSocketConnection, SocketProxy>();
                 var peerProxy = (SocketProxy)(object)peerSocket;
                 var peerClient = new IndexedClient(peerSocket, "观察者", "mp_kiwitest");
                 clients.Add(peerClient);
-                AlyxGlobalData.instance.AddPlayer(peerClient);
+                Player? peerPlayer = AlyxGlobalData.instance.AddPlayer(peerClient);
+                Check(peerPlayer != null, "peer player registered " + locale);
+                clientPlayer!.InitializationStage = InitializationStage.Ready;
                 Feed("TELE 1.25 -2.5 3.75 4.5 5.25 -6.75 KCOM");
-                Check(peerProxy.Sent.Any(r => r.data == "kcom_teleportangles 1.25 -2.5 3.75 4.5 5.25 -6.75"), "teleport culture " + locale);
+                Check(!peerProxy.Sent.Any(r => r.data?.StartsWith("kcom_teleportangles") == true), "loading peer isolated " + locale);
+                peerPlayer!.InitializationStage = InitializationStage.Ready;
+                client.Map = "mp_kiwitest";
+                peerClient.Map = "other_map";
+                Feed("TELE 1.25 -2.5 3.75 4.5 5.25 -6.75 KCOM");
+                Check(!peerProxy.Sent.Any(r => r.data?.StartsWith("kcom_teleportangles") == true), "different map peer isolated " + locale);
+                peerClient.Map = client.Map;
+                Feed("TELE 1.25 -2.5 3.75 4.5 5.25 -6.75 KCOM");
+                Check(peerProxy.Sent.Any(r => r.data == "kcom_teleportangles 1.25 -2.5 3.75 4.5 5.25 -6.75"), "ready same-map peer receives sync " + locale);
                 Feed("PHYS box_" + locale + " 1.25 -2.5 3.75 4.5 5.25 -6.75 KCOM");
                 Check(peerProxy.Sent.Any(r => r.data == "kcom_setlocation box_" + locale + " 1.25 -2.5 3.75 4.5 5.25 -6.75"), "physics culture " + locale);
                 AlyxGlobalData.instance.RemovePlayer(peerProxy.ID);
+                clientPlayer.InitializationStage = InitializationStage.AwaitEntities;
                 Map.map = "previous_map";
                 Feed("MAPN mp_kiwitest 4 KCOM");
                 Check(Map.map == "previous_map", "early map report ignored " + locale);

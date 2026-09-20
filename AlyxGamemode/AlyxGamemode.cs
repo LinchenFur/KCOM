@@ -32,6 +32,14 @@ namespace AlyxGamemode
             Name = "Half-Life: Alyx";
             Description = "Play Half-Life: Alyx with up to 16 players!";
         }
+        private static bool CanReceiveSync(Player? recipient, Player sender, Guid senderId)
+        {
+            return sender.InitializationStage == InitializationStage.Ready &&
+                   recipient != null && recipient.InitializationStage == InitializationStage.Ready &&
+                   recipient.Client.Map == sender.Client.Map &&
+                   recipient.Client.Session.ConnectionInfo.Id != senderId;
+        }
+
         public AlyxGamemode(GamemodeHandleType type, params object[]? vs)
         {
             int APIVersion = 4;
@@ -150,7 +158,7 @@ namespace AlyxGamemode
                                                             foreach (IndexedClient broadcastClient2 in connections)
                                                             {
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcastClient2.Session.ConnectionInfo.Id);
-                                                                if (keyValuePair != null && broadcastClient2.Session.ConnectionInfo.Id != socket.ConnectionInfo.Id)
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
                                                                 {
                                                                     broadcastClient2.Session.Send(JsonConvert.SerializeObject(spawn));
                                                                 }
@@ -171,7 +179,7 @@ namespace AlyxGamemode
                                                             foreach (IndexedClient broadcastClient2 in connections)
                                                             {
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcastClient2.Session.ConnectionInfo.Id);
-                                                                if (keyValuePair != null && broadcastClient2.Session.ConnectionInfo.Id != socket.ConnectionInfo.Id)
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
                                                                 {
                                                                     broadcastClient2.Session.Send(JsonConvert.SerializeObject(teleport));
                                                                 }
@@ -204,7 +212,7 @@ namespace AlyxGamemode
                                                             foreach (IndexedClient broadcastClient2 in connections)
                                                             {
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcastClient2.Session.ConnectionInfo.Id);
-                                                                if (keyValuePair != null && broadcastClient2.Session.ConnectionInfo.Id != socket.ConnectionInfo.Id)
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
                                                                 {
                                                                     broadcastClient2.Session.Send(JsonConvert.SerializeObject(movement));
                                                                     broadcastClient2.Session.Send(JsonConvert.SerializeObject(hatMovement));
@@ -238,7 +246,7 @@ namespace AlyxGamemode
                                                             foreach (IndexedClient broadcastClient2 in connections)
                                                             {
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcastClient2.Session.ConnectionInfo.Id);
-                                                                if (keyValuePair != null && broadcastClient2.Session.ConnectionInfo.Id != socket.ConnectionInfo.Id)
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
                                                                 {
                                                                     broadcastClient2.Session.Send(JsonConvert.SerializeObject(movementLeftHand));
                                                                     broadcastClient2.Session.Send(JsonConvert.SerializeObject(movementRightHand));
@@ -300,7 +308,7 @@ namespace AlyxGamemode
                                                                     foreach (IndexedClient broadcastClient2 in connections)
                                                                     {
                                                                         Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcastClient2.Session.ConnectionInfo.Id);
-                                                                        if (keyValuePair != null && broadcastClient2.Session.ConnectionInfo.Id != socket.ConnectionInfo.Id)
+                                                                        if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
                                                                         {
                                                                             broadcastClient2.Session.Send(JsonConvert.SerializeObject(output4));
                                                                         }
@@ -342,7 +350,7 @@ namespace AlyxGamemode
                                                             foreach (IndexedClient broadcast in connections)
                                                             {
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
-                                                                if (keyValuePair != null && broadcast.Session.ConnectionInfo.Id != socket.ConnectionInfo.Id)
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
                                                                 {
                                                                     Response breakprop = new("status", "Broken prop: " + packet.args[0]);
                                                                     broadcast.Session.Send(JsonConvert.SerializeObject(removeBreak));
@@ -354,7 +362,7 @@ namespace AlyxGamemode
                                                             foreach (IndexedClient broadcast in connections)
                                                             {
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
-                                                                if (keyValuePair != null && broadcast.Session.ConnectionInfo.Id != socket.ConnectionInfo.Id)
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
                                                                 {
                                                                     broadcast.Session.Send(JsonConvert.SerializeObject(remove));
                                                                 }
@@ -366,7 +374,7 @@ namespace AlyxGamemode
                                                             foreach (IndexedClient broadcast in connections)
                                                             {
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
-                                                                if (keyValuePair != null && broadcast.Session.ConnectionInfo.Id != socket.ConnectionInfo.Id)
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
                                                                 {
                                                                     broadcast.Session.Send(JsonConvert.SerializeObject(fire));
                                                                 }
@@ -374,7 +382,12 @@ namespace AlyxGamemode
                                                             break;
                                                         case PacketType.NPCHealth:
                                                             Response p = new("command", "kcom_npc_sethealth " + packet.args[0] + " " + packet.args[1]);
-                                                            connections.ForEach(c => c.Session.Send(JsonConvert.SerializeObject(p)));
+                                                            foreach (IndexedClient broadcast in connections)
+                                                            {
+                                                                Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
+                                                                    broadcast.Session.Send(JsonConvert.SerializeObject(p));
+                                                            }
                                                             break;
                                                         case PacketType.KCOMCommand:
                                                             response.type = "chat";
@@ -387,7 +400,7 @@ namespace AlyxGamemode
                                                             foreach (IndexedClient broadcast in connections)
                                                             {
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
-                                                                if (keyValuePair != null && broadcast.Session.ConnectionInfo.Id != socket.ConnectionInfo.Id)
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
                                                                 {
                                                                     broadcast.Session.Send(JsonConvert.SerializeObject(templateCache));
                                                                 }

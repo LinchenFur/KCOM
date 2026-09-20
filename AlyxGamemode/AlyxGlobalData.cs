@@ -61,27 +61,37 @@ namespace AlyxGamemode
         }
         public Player? AddPlayer(IndexedClient client)
         {
-            if(players.Count < 16)
+            lock (players)
             {
-                Player player = new(players.Count, client);
-                players.Add(player);
-                return player;
+                Player? existing = players.Find(player => player.Client.Session.ConnectionInfo.Id == client.Session.ConnectionInfo.Id);
+                if (existing != null) return existing;
+                for (int index = 0; index < 16; index++)
+                {
+                    if (players.All(player => player.Index != index))
+                    {
+                        Player player = new(index, client);
+                        players.Add(player);
+                        return player;
+                    }
+                }
+                return null;
             }
-            return null;
         }
         public bool RemovePlayer(Guid id)
         {
-            Player? oldPlayer = players.Find(p => p.Client.Session.ConnectionInfo.Id == id);
-            if (oldPlayer != null)
-                return players.Remove(oldPlayer);
-            return false;
+            lock (players)
+            {
+                Player? oldPlayer = players.Find(p => p.Client.Session.ConnectionInfo.Id == id);
+                return oldPlayer != null && players.Remove(oldPlayer);
+            }
         }
         public bool RemovePlayer(int index)
         {
-            Player? oldPlayer = players.Find(p => p.Index == index);
-            if (oldPlayer != null)
-                players.Remove(oldPlayer);
-            return false;
+            lock (players)
+            {
+                Player? oldPlayer = players.Find(p => p.Index == index);
+                return oldPlayer != null && players.Remove(oldPlayer);
+            }
         }
     }
 }
