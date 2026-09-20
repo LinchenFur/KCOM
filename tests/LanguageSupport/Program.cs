@@ -118,9 +118,11 @@ internal static partial class Program
         string intervalLua = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "kcom_interval.lua"));
         Check(intervalLua.Contains("RESC ") && intervalLua.Contains("kcom_setresources"), "Lua resource snapshot protocol");
         Check(intervalLua.Contains("player_retrieved_backpack_clip") && intervalLua.Contains("player_drop_resin_in_backpack"), "Lua resource event hooks");
+        Check(intervalLua.Contains("KCOM_RegisterCompatibility") && intervalLua.Contains("KCOM_EmitCompatibility"), "Lua compatibility API");
         TestMapNames();
         TestPlayerIndexes();
         TestResourceInventory();
+        TestCompatibilityEvents();
         await TestGamemode();
         await TestClientStartup();
         Console.WriteLine($"PASS: {checks} language support checks (mock game/loopback, not a live Alyx playtest).");
@@ -279,6 +281,33 @@ internal static partial class Program
         peerProxy.Sent.Clear();
         Feed("RESC 4 1 4 8 KCOM");
         Check(peerProxy.Sent.Count == 0, "independent resource inventory does not write back");
+        AlyxGlobalData.instance.RemovePlayer(sourceProxy.ID);
+        AlyxGlobalData.instance.RemovePlayer(peerProxy.ID);
+    }
+
+    static void TestCompatibilityEvents()
+    {
+        var sourceSocket = DispatchProxy.Create<IWebSocketConnection, SocketProxy>();
+        var peerSocket = DispatchProxy.Create<IWebSocketConnection, SocketProxy>();
+        var sourceProxy = (SocketProxy)(object)sourceSocket;
+        var peerProxy = (SocketProxy)(object)peerSocket;
+        var source = new IndexedClient(sourceSocket, "兼容主机", "mp_kiwitest");
+        var peer = new IndexedClient(peerSocket, "兼容观察者", "mp_kiwitest");
+        var clients = new List<IndexedClient> { source, peer };
+        Player? sourcePlayer = AlyxGlobalData.instance.AddPlayer(source);
+        Player? peerPlayer = AlyxGlobalData.instance.AddPlayer(peer);
+        sourcePlayer!.InitializationStage = InitializationStage.Ready;
+        peerPlayer!.InitializationStage = InitializationStage.Ready;
+        void Feed(string line) => _ = new AlyxGamemode.AlyxGamemode(GamemodeHandleType.PreResponse,
+            new Response("print", line), clients, sourceSocket, "mp_kiwitest");
+        Feed("XREG testmod weapon_fire KCOM");
+        Feed("XEVT testmod weapon_fire shot_1 KCOM");
+        Check(peerProxy.Sent.Any(r => r.data == "kcom_compat_event testmod weapon_fire \"shot_1\""), "compatibility event forwarded");
+        Check(!sourceProxy.Sent.Any(r => r.data?.Contains("kcom_compat_event") == true), "compatibility event not echoed");
+        peerProxy.Sent.Clear();
+        Feed("XEVT testmod unknown value KCOM");
+        Feed("XEVT testmod weapon_fire bad;quit KCOM");
+        Check(peerProxy.Sent.Count == 0, "unregistered or unsafe compatibility event rejected");
         AlyxGlobalData.instance.RemovePlayer(sourceProxy.ID);
         AlyxGlobalData.instance.RemovePlayer(peerProxy.ID);
     }

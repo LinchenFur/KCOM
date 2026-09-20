@@ -32,6 +32,34 @@ namespace AlyxGamemode
             Name = "Half-Life: Alyx";
             Description = "Play Half-Life: Alyx with up to 16 players!";
         }
+        private static readonly Dictionary<Guid, HashSet<string>> compatibilityEvents = new();
+        private static bool IsSafeCompatibilityName(string value) => value.Length is > 0 and <= 64 && value.All(c =>
+            (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c is '_' or '-');
+        private static bool TryParseCompatibilityRegistration(string data, out string key)
+        {
+            key = "";
+            string[] parts = data.Trim().Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 4 || parts[0] != "XREG" || parts[3] != "KCOM" ||
+                !IsSafeCompatibilityName(parts[1]) || !IsSafeCompatibilityName(parts[2])) return false;
+            key = parts[1] + ":" + parts[2];
+            return true;
+        }
+        private static bool TryParseCompatibilityEvent(string data, out string key, out string payload)
+        {
+            key = ""; payload = "";
+            string value = data.Trim();
+            if (!value.StartsWith("XEVT ", StringComparison.Ordinal) || !value.EndsWith(" KCOM", StringComparison.Ordinal)) return false;
+            string body = value[5..^5].Trim();
+            int first = body.IndexOf(' '), second = first < 0 ? -1 : body.IndexOf(' ', first + 1);
+            if (first <= 0 || second <= first + 1) return false;
+            string ns = body[..first], eventName = body[(first + 1)..second];
+            payload = body[(second + 1)..];
+            if (!IsSafeCompatibilityName(ns) || !IsSafeCompatibilityName(eventName) || payload.Length > 1024 ||
+                payload.Any(c => c is '\0' or '\r' or '\n' or ';' or '"' or '\\')) return false;
+            key = ns + ":" + eventName;
+            return payload.Length > 0;
+        }
+
         private readonly record struct ResourceSnapshot(int Energygun, int Rapidfire, int Shotgun, int Resin)
         {
             public static ResourceSnapshot operator +(ResourceSnapshot left, ResourceSnapshot right) =>
@@ -120,6 +148,7 @@ namespace AlyxGamemode
                                     player.InitializationGeneration++;
                                     player.InitializationStage = InitializationStage.None;
                                     resourceSnapshots.Remove(closeSocket.ConnectionInfo.Id);
+                                    compatibilityEvents.Remove(closeSocket.ConnectionInfo.Id);
                                     AlyxGlobalData.instance.RemovePlayer(closeSocket.ConnectionInfo.Id);
                                 }
                             }
@@ -180,6 +209,27 @@ namespace AlyxGamemode
                                                     readyPlayer.InitializationStage = InitializationStage.AwaitInit;
                                                     Response initialize = new("command", "sv_cheats 1;ent_remove_all kcom_script;ent_remove_all kcom_timer;echo INIT KCOM");
                                                     socket.Send(JsonConvert.SerializeObject(initialize));
+                                                }
+                                            }
+                                        }
+                                        else if (TryParseCompatibilityRegistration(response.data, out string registration))
+                                        {
+                                            if (!compatibilityEvents.TryGetValue(socket.ConnectionInfo.Id, out HashSet<string>? registered))
+                                                compatibilityEvents[socket.ConnectionInfo.Id] = registered = new(StringComparer.Ordinal);
+                                            registered.Add(registration);
+                                        }
+                                        else if (TryParseCompatibilityEvent(response.data, out string eventKey, out string payload))
+                                        {
+                                            Player? sender = AlyxGlobalData.instance.GetPlayer(socket.ConnectionInfo.Id);
+                                            if (sender != null && compatibilityEvents.TryGetValue(socket.ConnectionInfo.Id, out HashSet<string>? registered) && registered.Contains(eventKey))
+                                            {
+                                                string[] names = eventKey.Split(':', 2);
+                                                Response extension = new("command", "kcom_compat_event " + names[0] + " " + names[1] + " \"" + payload + "\"");
+                                                foreach (IndexedClient broadcast in connections)
+                                                {
+                                                    Player? recipient = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
+                                                    if (CanReceiveSync(recipient, sender, socket.ConnectionInfo.Id))
+                                                        broadcast.Session.Send(extension.ToString());
                                                 }
                                             }
                                         }

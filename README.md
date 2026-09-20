@@ -51,6 +51,29 @@
 
 ### 同步生命周期加固
 
+### 第三方模组兼容 API（v1）
+
+第三方 Alyx addon 可以在 `kcom_interval.lua` 加载后注册自己的同步事件：
+
+```lua
+KCOM_RegisterCompatibility("my_weapon", {
+    events = {"fire", "reload"},
+    entities = {"my_weapon_entity"},
+    resources = {"energy"},
+    handlers = {
+        fire = function(payload)
+            -- 只处理数据；不要把 payload 直接当控制台代码执行
+        end,
+    },
+})
+KCOM_EmitCompatibility("my_weapon", "fire", "shot_1")
+```
+
+- `namespace`、事件名和资源名只允许字母、数字、`_`、`-`，长度最多 64。
+- `payload` 最多 1024 字节，不能包含换行、分号、引号、反斜杠或控制字符。
+- 服务器只转发给同地图且初始化完成的玩家，不回传给发送者。
+- API 只传递事件数据，不自动实现武器弹道、动画、换弹、模型生成或 Workshop 下载；其它玩家仍需安装对应 addon。
+
 ### 弹药与树脂库存
 
 - 默认每名玩家独立保存弹药和树脂。服务器主机可在“选项”菜单打开“服务器：共享资源库存”，让手枪弹匣、冲锋枪弹匣、霰弹和树脂由服务器维护共享池。

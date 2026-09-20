@@ -1,0 +1,3 @@
+schema: spec-driven
+created: 2026-09-20
+goal: 让自定义地图、武器和资源可以接入 KCOM 而无需修改核心同步代码

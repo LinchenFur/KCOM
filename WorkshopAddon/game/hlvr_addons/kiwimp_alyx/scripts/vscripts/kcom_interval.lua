@@ -9,6 +9,9 @@ KCOM_INITIALIZED = false;
 KCOM_ENTCACHE = {};
 KCOM_RESOURCE_SNAPSHOT = nil;
 KCOM_RESOURCE_SUPPRESS = nil;
+KCOM_COMPAT_EVENTS = {};
+KCOM_COMPAT_HANDLERS = {};
+KCOM_COMPAT_RESOURCES = {};
 
 print("KCOM Enabled!");
 
@@ -35,6 +38,41 @@ end
 RegisterPlayerEventCallback("player_drop_ammo_in_backpack", KCOM_ResourceSnapshot);
 RegisterPlayerEventCallback("player_retrieved_backpack_clip", KCOM_ResourceSnapshot);
 RegisterPlayerEventCallback("player_drop_resin_in_backpack", KCOM_ResourceSnapshot);
+
+local function KCOM_IsCompatName(value)
+    return type(value) == "string" and #value > 0 and #value <= 64 and string.match(value, "^[%w_-]+$") ~= nil;
+end
+
+function KCOM_RegisterCompatibility(namespace, spec)
+    if not KCOM_IsCompatName(namespace) or type(spec) ~= "table" then return false end
+    KCOM_COMPAT_EVENTS[namespace] = KCOM_COMPAT_EVENTS[namespace] or {};
+    KCOM_COMPAT_HANDLERS[namespace] = KCOM_COMPAT_HANDLERS[namespace] or {};
+    KCOM_COMPAT_RESOURCES[namespace] = KCOM_COMPAT_RESOURCES[namespace] or {};
+    for _, eventName in ipairs(spec.events or {}) do
+        if not KCOM_IsCompatName(eventName) then return false end
+        KCOM_COMPAT_EVENTS[namespace][eventName] = true;
+        if type(spec.handlers) == "table" and type(spec.handlers[eventName]) == "function" then
+            KCOM_COMPAT_HANDLERS[namespace][eventName] = spec.handlers[eventName];
+        end
+        print("XREG " .. namespace .. " " .. eventName .. " KCOM");
+    end
+    for _, className in ipairs(spec.entities or {}) do
+        if type(className) ~= "string" or #className == 0 or #className > 96 or string.find(className, "[%c;\"]") then return false end
+        kcom_trackers[className] = true;
+    end
+    for _, resourceName in ipairs(spec.resources or {}) do
+        if not KCOM_IsCompatName(resourceName) then return false end
+        KCOM_COMPAT_RESOURCES[namespace][resourceName] = true;
+    end
+    return true;
+end
+
+function KCOM_EmitCompatibility(namespace, eventName, payload)
+    if not KCOM_IsCompatName(namespace) or not KCOM_IsCompatName(eventName) or type(payload) ~= "string" or #payload == 0 or #payload > 1024 or string.find(payload, "[%c;\"]") then return false end
+    if not KCOM_COMPAT_EVENTS[namespace] or not KCOM_COMPAT_EVENTS[namespace][eventName] then return false end
+    print("XEVT " .. namespace .. " " .. eventName .. " " .. payload .. " KCOM");
+    return true;
+end
 
 function Precache(context)
     PrecacheModel("models/props/choreo_office/headset_prop.vmdl", context)
@@ -862,6 +900,12 @@ function KiwisCoOpMod()
             Player.Items.resin = values[4];
             KCOM_RESOURCE_SUPPRESS = table.concat(values, " ");
             SendToServerConsole("hlvr_setresources " .. (values[1] * 10) .. " " .. (values[2] * 30) .. " " .. values[3] .. " " .. values[4]);
+        end, "Kiwi's Co-Op Mod", 0);
+
+        Convars:RegisterCommand("kcom_compat_event", function(command, namespace, eventName, payload)
+            local handlers = KCOM_COMPAT_HANDLERS[namespace];
+            local handler = handlers and handlers[eventName];
+            if handler then handler(payload); end
         end, "Kiwi's Co-Op Mod", 0);
 
         Convars:RegisterCommand("kcom_cache_all_entities", function(command)
