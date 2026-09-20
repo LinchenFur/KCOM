@@ -1,0 +1,3 @@
+schema: spec-driven
+created: 2026-09-20
+goal: 拒绝损坏或恶意报文并保持游戏同步继续运行

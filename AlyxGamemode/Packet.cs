@@ -15,6 +15,7 @@
 */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -69,7 +70,7 @@ namespace AlyxGamemode
         public Packet(string type, string args)
         {
             this.type = ParseType(type);
-            this.args = args.Split(" ");
+            this.args = Tokenize(args);
         }
         public Packet(string type, string[] args)
         {
@@ -83,7 +84,7 @@ namespace AlyxGamemode
         public Packet(PacketType type, string args)
         {
             this.type = type;
-            this.args = args.Split(" ");
+            this.args = Tokenize(args);
         }
         public Packet(PacketType type, string[] args)
         {
@@ -92,12 +93,54 @@ namespace AlyxGamemode
         }
         public bool IsValid()
         {
+            if (type == PacketType.None || args.Length == 0 || args[^1] != "KCOM") return false;
             return type switch
             {
-                PacketType.None => false,
-                _ => true,
+                PacketType.PlayerPosAng => args.Length == 8 && AreFiniteNumbers(0, 7),
+                PacketType.HeadPosAng => args.Length == 7 && AreFiniteNumbers(0, 6),
+                PacketType.HandPosAng => args.Length == 13 && AreFiniteNumbers(0, 12),
+                PacketType.Initialization or PacketType.InitializedEntities => args.Length == 1,
+                PacketType.PhysicsObjectPosAng => args.Length == 8 && IsSafeToken(args[0]) && AreFiniteNumbers(1, 6),
+                PacketType.MapName => args.Length == 3 && IsSafeToken(args[0]) && IsNonNegativeInteger(args[1]),
+                PacketType.ResourceSnapshot => args.Length == 5 && AreNonNegativeIntegers(0, 4),
+                PacketType.Teleport => args.Length == 7 && AreFiniteNumbers(0, 6),
+                PacketType.Spawn => args.Length == 6 && IsSafeToken(args[0]) && IsSafeToken(args[1]) && AreFiniteNumbers(2, 3),
+                PacketType.BrokenProp or PacketType.EntityRemoved or PacketType.TemplateEntity => args.Length == 2 && IsSafeToken(args[0]),
+                PacketType.EntityFired => args.Length == 3 && IsSafeToken(args[0]) && IsSafeToken(args[1]),
+                PacketType.NPCHealth => args.Length == 3 && IsSafeToken(args[0]) && IsFiniteNumber(args[1]),
+                PacketType.KCOMCommand => args.Length >= 2,
+                _ => args.Length >= 1,
             };
         }
+
+        private static string[] Tokenize(string value) =>
+            value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries);
+
+        private bool AreFiniteNumbers(int start, int count)
+        {
+            if (start < 0 || count < 0 || start + count > args.Length) return false;
+            for (int i = start; i < start + count; i++)
+                if (!IsFiniteNumber(args[i])) return false;
+            return true;
+        }
+
+        private bool AreNonNegativeIntegers(int start, int count)
+        {
+            if (start < 0 || count < 0 || start + count > args.Length) return false;
+            for (int i = start; i < start + count; i++)
+                if (!IsNonNegativeInteger(args[i])) return false;
+            return true;
+        }
+
+        private static bool IsFiniteNumber(string value) =>
+            float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float parsed) && float.IsFinite(parsed);
+
+        private static bool IsNonNegativeInteger(string value) =>
+            int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out int parsed) && parsed >= 0;
+
+        private static bool IsSafeToken(string value) =>
+            !string.IsNullOrWhiteSpace(value) && value.IndexOfAny(new[] { '\0', '\r', '\n', ';', '"', '\\' }) < 0;
+
         private static PacketType ParseType(string type)
         {
             return type.ToUpperInvariant() switch

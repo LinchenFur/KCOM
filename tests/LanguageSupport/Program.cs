@@ -121,6 +121,7 @@ internal static partial class Program
         Check(intervalLua.Contains("KCOM_RegisterCompatibility") && intervalLua.Contains("KCOM_EmitCompatibility"), "Lua compatibility API");
         TestMapNames();
         TestPlayerIndexes();
+        TestPacketValidation();
         TestResourceInventory();
         TestCompatibilityEvents();
         await TestGamemode();
@@ -248,6 +249,31 @@ internal static partial class Program
         var reused = AlyxGlobalData.instance.AddPlayer(clients[3]);
         Check(reused?.Index == 1 && last?.Index == 2, "freed player index reused without renumbering");
         foreach (IndexedClient client in clients) AlyxGlobalData.instance.RemovePlayer(client.Session.ConnectionInfo.Id);
+    }
+
+    static void TestPacketValidation()
+    {
+        foreach (Packet packet in new[]
+        {
+            new Packet("HEAD", "1 2 3 4 5 6 KCOM"),
+            new Packet("HAND", "1 2 3 4 5 6 7 8 9 10 11 12 KCOM"),
+            new Packet("PHYS", "entity 1 2 3 4 5 6 KCOM"),
+            new Packet("MAPN", "mp_kiwitest 4 KCOM"),
+            new Packet("RESC", "2 1 4 10 KCOM"),
+            new Packet("SPWN", "item_test entity 1 2 3 KCOM"),
+            new Packet("CMND", "hello KCOM"),
+        }) Check(packet.IsValid(), "valid packet accepted: " + packet.type);
+        foreach (Packet packet in new[]
+        {
+            new Packet("HEAD", "1 2 3 4 5 KCOM"),
+            new Packet("HEAD", "1 2 3 NaN 5 6 KCOM"),
+            new Packet("PHYS", "entity 1 2 3 4 5 Infinity KCOM"),
+            new Packet("RESC", "2 -1 4 10 KCOM"),
+            new Packet("SPWN", "item_test entity 1 2 3"),
+            new Packet("MAPN", "mp_kiwitest nope KCOM"),
+            new Packet("FIRE", "entity OnTrigger;quit KCOM"),
+        }) Check(!packet.IsValid(), "invalid packet rejected: " + packet.type);
+        Check(new Packet("HEAD", "  1   2 3 4 5 6   KCOM ").IsValid(), "packet whitespace normalized");
     }
 
     static void TestResourceInventory()
