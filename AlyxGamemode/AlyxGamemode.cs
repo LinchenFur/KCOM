@@ -442,7 +442,8 @@ namespace AlyxGamemode
                                                                 Entity entity = new(packet.args[0], float.Parse(packet.args[1], CultureInfo.InvariantCulture), float.Parse(packet.args[2], CultureInfo.InvariantCulture), float.Parse(packet.args[3], CultureInfo.InvariantCulture), float.Parse(packet.args[4], CultureInfo.InvariantCulture), float.Parse(packet.args[5], CultureInfo.InvariantCulture), float.Parse(packet.args[6], CultureInfo.InvariantCulture));
                                                                 if (AlyxGlobalData.instance.AddManipulatedEntity(entity, socket.ConnectionInfo.Id, connections))
                                                                 {
-                                                                    Response output4 = new("command", "kcom_setlocation " + packet.args[0] + " " + packet.args[1] + " " + packet.args[2] + " " + packet.args[3] + " " + packet.args[4] + " " + packet.args[5] + " " + packet.args[6]);
+                                                                    string velocity = packet.args.Length == 14 ? " " + string.Join(" ", packet.args.Skip(7).Take(6)) : "";
+                                                                    Response output4 = new("command", "kcom_setlocation " + packet.args[0] + " " + packet.args[1] + " " + packet.args[2] + " " + packet.args[3] + " " + packet.args[4] + " " + packet.args[5] + " " + packet.args[6] + velocity);
                                                                     foreach (IndexedClient broadcastClient2 in connections)
                                                                     {
                                                                         Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcastClient2.Session.ConnectionInfo.Id);
@@ -547,6 +548,15 @@ namespace AlyxGamemode
                                                                 Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
                                                                 if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
                                                                     broadcast.Session.Send(JsonConvert.SerializeObject(parent));
+                                                            }
+                                                            break;
+                                                        case PacketType.RagdollSpawn:
+                                                            Response ragdoll = new("command", "kcom_spawn_ragdoll " + string.Join(" ", packet.args.Take(packet.args.Length - 1)));
+                                                            foreach (IndexedClient broadcast in connections)
+                                                            {
+                                                                Player? keyValuePair = AlyxGlobalData.instance.GetPlayer(broadcast.Session.ConnectionInfo.Id);
+                                                                if (CanReceiveSync(keyValuePair, player, socket.ConnectionInfo.Id))
+                                                                    broadcast.Session.Send(JsonConvert.SerializeObject(ragdoll));
                                                             }
                                                             break;
                                                         case PacketType.NPCHealth:

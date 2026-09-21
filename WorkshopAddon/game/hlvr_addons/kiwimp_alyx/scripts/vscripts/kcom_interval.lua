@@ -7,6 +7,7 @@ KCOM_API_VERSION = 4; -- this value will change if breaking changes are pushed t
 KCOM_ACTIVE = false;
 KCOM_INITIALIZED = false;
 KCOM_ENTCACHE = {};
+KCOM_RAGDOLLS = {};
 KCOM_RESOURCE_SNAPSHOT = nil;
 KCOM_RESOURCE_SUPPRESS = nil;
 KCOM_COMPAT_EVENTS = {};
@@ -39,6 +40,27 @@ end
 RegisterPlayerEventCallback("player_drop_ammo_in_backpack", KCOM_ResourceSnapshot);
 RegisterPlayerEventCallback("player_retrieved_backpack_clip", KCOM_ResourceSnapshot);
 RegisterPlayerEventCallback("player_drop_resin_in_backpack", KCOM_ResourceSnapshot);
+
+local function KCOM_RagdollCreated(_, data)
+    if not KCOM_GetSyncName or not KCOM_EntitySyncSpecific then return end
+    if not data or not data.npc_entindex or not data.ragdoll_entindex then return end
+    local npc = EntIndexToHScript(data.npc_entindex);
+    local ragdoll = EntIndexToHScript(data.ragdoll_entindex);
+    if not IsValidEntity(npc) or not IsValidEntity(ragdoll) then return end
+    local npcName = KCOM_GetSyncName(npc);
+    if not npcName or npcName == "" then return end
+    local origin = ragdoll:GetAbsOrigin();
+    local angles = ragdoll:GetAnglesAsVector();
+    local model = ragdoll:GetModelName();
+    if not model or model == "" then model = npc:GetModelName(); end
+    local ragdollName = npcName .. "+ragdoll";
+    ragdoll:SetEntityName(ragdollName);
+    KCOM_EntitySyncSpecific(ragdoll, false, ragdollName);
+    local stableName = KCOM_GetSyncName(ragdoll);
+    KCOM_RAGDOLLS[npcName] = stableName;
+    print("RAGD "..stableName.." "..origin[1].." "..origin[2].." "..origin[3].." "..angles[1].." "..angles[2].." "..angles[3].." "..model.." KCOM");
+end
+ListenToGameEvent("npc_ragdoll_created", KCOM_RagdollCreated, nil);
 
 local function KCOM_PlayerHurt(data)
     local damage = tonumber(data and (data.damageamount or data.damage)) or 0;
@@ -171,7 +193,13 @@ function KiwisCoOpMod()
                         local angleChanged = math.abs(angles[1] - object.angles[1]) > 2 or math.abs(angles[2] - object.angles[2]) > 2 or math.abs(angles[3] - object.angles[3]) > 2;
                         local originChanged = math.abs(origin[1] - object.origin[1]) > 0.5 or math.abs(origin[2] - object.origin[2]) > 0.5 or math.abs(origin[3] - object.origin[3]) > 0.5;
                         if angleChanged or originChanged then
-                            print("PHYS "..object.name.." "..origin[1].." "..origin[2].." "..origin[3].." "..angles[1].." "..angles[2].." "..angles[3].." KCOM");
+                            local velocity = "";
+                            if object.class == "prop_ragdoll" then
+                                local linear = GetPhysVelocity(entity);
+                                local angular = GetPhysAngularVelocity(entity);
+                                velocity = " "..linear[1].." "..linear[2].." "..linear[3].." "..angular[1].." "..angular[2].." "..angular[3];
+                            end
+                            print("PHYS "..object.name.." "..origin[1].." "..origin[2].." "..origin[3].." "..angles[1].." "..angles[2].." "..angles[3]..velocity.." KCOM");
                             object.origin = origin;
                             object.angles = angles;
                         end
@@ -213,7 +241,7 @@ function KiwisCoOpMod()
             print("TELE "..origin[1].." "..origin[2].." "..origin[3].." "..angles[1].." "..angles[2].." "..angles[3].." KCOM");
         end
 
-        function KCOM_EntitySyncSpecific(entity, announce)
+        function KCOM_EntitySyncSpecific(entity, announce, forcedName)
             for _, cached in pairs(KCOM_ENTCACHE) do
                 if cached.entity == entity then
                     return false, cached.name, cached.class
@@ -221,7 +249,7 @@ function KiwisCoOpMod()
             end
 
             local object = {};
-            object.name = entity:GetName();
+            object.name = forcedName or entity:GetName();
             object.origin = entity:GetAbsOrigin();
             object.angles = entity:GetAnglesAsVector();
             object.class = entity:GetClassname();
@@ -249,7 +277,7 @@ function KiwisCoOpMod()
 
             entity:SetEntityName(object.name);
             if KCOM_USE_UUIDS then
-                local uu = uuid(object.name, object.origin[1], object.origin[2], object.origin[3], object.class);
+                local uu = forcedName or uuid(object.name, object.origin[1], object.origin[2], object.origin[3], object.class);
                 object.name = uu;
                 KCOM_ENTCACHE[uu] = object;
             else
@@ -472,7 +500,7 @@ function KiwisCoOpMod()
             -- npcs are loose on purpose as they continuously move
         };
 
-        local function KCOM_GetSyncName(entity)
+        function KCOM_GetSyncName(entity)
             for key, object in pairs(KCOM_ENTCACHE) do
                 if object.entity == entity then return key end
             end
@@ -793,6 +821,25 @@ function KiwisCoOpMod()
             return nil, nil
         end
 
+        Convars:RegisterCommand("kcom_spawn_ragdoll", function(command, name, x, y, z, pitch, yaw, roll, model)
+            if not name or not model or string.find(name, "[%c;\"]") or string.find(model, "[%c;\"]") then return end
+            local entity = KCOM_FindSyncEntity(name);
+            if not entity then
+                entity = SpawnEntityFromTableSynchronous("prop_ragdoll", {
+                    targetname = name,
+                    model = model,
+                    origin = x .. " " .. y .. " " .. z,
+                    angles = pitch .. " " .. yaw .. " " .. roll,
+                });
+            end
+            if IsValidEntity(entity) then
+                entity:SetEntityName(name);
+                entity:SetAbsOrigin(Vector(tonumber(x), tonumber(y), tonumber(z)));
+                entity:SetAbsAngles(tonumber(pitch), tonumber(yaw), tonumber(roll));
+                KCOM_EntitySyncSpecific(entity, false, name);
+            end
+        end, "Kiwi's Co-Op Mod", 0);
+
         Convars:RegisterCommand("kcom_spawn", function(command, class, name, x, y, z, model)
             if not class or not name or string.find(class, "[%c;\"]") or string.find(name, "[%c;\"]") or (model and string.find(model, "[%c;\"]")) then return end
             local entity = KCOM_FindSyncEntity(name)
@@ -804,7 +851,9 @@ function KiwisCoOpMod()
                 })
             end
             if IsValidEntity(entity) then
+                entity:SetEntityName(name);
                 entity:SetAbsOrigin(Vector(tonumber(x), tonumber(y), tonumber(z)))
+                KCOM_EntitySyncSpecific(entity, false, name);
             end
         end, "Kiwi's Co-Op Mod", 0);
 
@@ -856,7 +905,7 @@ function KiwisCoOpMod()
             if parent and parent ~= child then child:SetParent(parent, ""); end
         end, "Kiwi's Co-Op Mod", 0);
 
-        Convars:RegisterCommand("kcom_setlocation", function(command, name, x, y, z, pitch, yaw, roll)
+        Convars:RegisterCommand("kcom_setlocation", function(command, name, x, y, z, pitch, yaw, roll, vx, vy, vz, avx, avy, avz)
             if not KCOM_USE_UUIDS then
                 local entities = Entities:FindAllByName(name);
                 if entities ~= nil then
@@ -877,6 +926,10 @@ function KiwisCoOpMod()
                 end
                 entity:SetAbsOrigin(Vector(tonumber(x), tonumber(y), tonumber(z)));
                 entity:SetAbsAngles(tonumber(pitch), tonumber(yaw), tonumber(roll));
+                if class == "prop_ragdoll" and vx then
+                    entity:SetVelocity(Vector(tonumber(vx), tonumber(vy), tonumber(vz)));
+                    SetPhysAngularVelocity(entity, Vector(tonumber(avx), tonumber(avy), tonumber(avz)));
+                end
             end
         end, "Kiwi's Co-Op Mod", 0);
 

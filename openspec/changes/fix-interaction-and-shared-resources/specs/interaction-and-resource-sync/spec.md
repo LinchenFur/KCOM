@@ -92,3 +92,26 @@ KCOM MUST synchronize supported parent-child relationships between tracked physi
 - **WHEN** the tracked object is detached from its container
 - **THEN** the addon emits `PARN <child> NONE KCOM`
 - **AND** the receiving client removes the parent relationship while retaining the child's synchronized transform
+
+### Requirement: Ragdoll bodies synchronize as interactive physics entities
+
+KCOM MUST listen for `npc_ragdoll_created`, create one stable ragdoll identifier, and synchronize the ragdoll model, transform, linear velocity, angular velocity, parenting, and removal through the existing entity channels.
+
+#### Scenario: An NPC becomes a ragdoll
+
+- **WHEN** the local game emits `npc_ragdoll_created`
+- **THEN** the addon emits one `RAGD` packet with the stable ragdoll name, model, position, and angles
+- **AND** the server sends `kcom_spawn_ragdoll` to other Ready clients on the same map
+
+#### Scenario: A player grabs and throws a corpse
+
+- **WHEN** a tracked ragdoll is moved, rotated, parented, or released
+- **THEN** the addon emits `PHYS` and/or `PARN` updates
+- **AND** the receiving client applies the ragdoll transform and physics velocities
+
+#### Scenario: Ragdoll bone pose is not directly exposed
+
+- **GIVEN** the Alyx Lua API does not expose per-bone world transforms
+- **WHEN** a ragdoll is synchronized
+- **THEN** KCOM uses the Source 2 ragdoll physics state as the authoritative skeleton driver
+- **AND** KCOM MUST NOT pretend to synchronize unavailable per-bone data
